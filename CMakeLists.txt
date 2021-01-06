@@ -3,4 +3,4 @@ project(voronoi_generation C)
 
 set(CMAKE_C_STANDARD 11)
 
-add_executable(voronoi_generation main.c)
+add_executable(voronoi_generation main.c int_array.h int_array.c int_matrix.c int_matrix.h)
