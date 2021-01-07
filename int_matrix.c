@@ -26,20 +26,29 @@ IntMatrix* init_int_matrix(int width, int height) {
 void free_int_matrix(IntMatrix* matrix) {
   for (int i = 0; i < matrix->height; i++)
     free_int_array(matrix->matrix[i]);
-
   free(matrix->matrix);
   free(matrix);
 }
 
-void insert_int_matrix(IntMatrix* matrix, int i, int j, int item) {
-  if (i < 0 || i > matrix->width) {
-    fprintf(stderr, "column index %d out of bounds", i);
-    exit(EXIT_FAILURE);
-  }
-  else if (j < 0 || j > matrix->height) {
-    fprintf(stderr, "row index %d out of bounds", j);
+void add_int_matrix(IntMatrix* matrix, IntArray* arr) {
+  if (matrix->width != arr->size) {
+    fprintf(stderr, "inserted array of size %d must be same size %d as width of the matrix",
+            arr->size, matrix->width);
     exit(EXIT_FAILURE);
   }
 
-  insert_int_array(matrix->matrix[j], i, item);
+  // TODO resizing here
+}
+
+void insert_int_matrix(IntMatrix* matrix, int col, int row, int item) {
+  if (col < 0 || col > matrix->width) {
+    fprintf(stderr, "column index %d out of bounds", col);
+    exit(EXIT_FAILURE);
+  }
+  else if (row < 0 || row > matrix->height) {
+    fprintf(stderr, "row index %d out of bounds", row);
+    exit(EXIT_FAILURE);
+  }
+
+  matrix->matrix[row]->items[col] = item; // TODO insert item array
 }

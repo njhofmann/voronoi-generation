@@ -6,6 +6,7 @@
 #include <string.h>
 #include "int_array.h"
 #include "int_matrix.h"
+#include "distance_metric.h"
 
 static struct option LONG_OPTIONS[] = {
     // flag = NULL means val is used to id if arg is included
@@ -19,30 +20,6 @@ static struct option LONG_OPTIONS[] = {
     {NULL, 0, NULL, 0}
 };
 
-typedef enum {
-  EUCLIDEAN = 1,
-  MANHATTAN = 2,
-  MAHALANOBIS = 3,
-  RAMANUJAN = 4
-} DistanceMetric;
-
-bool streq(char* a, char* b) {
-  return strcmp(a, b) == 0;
-}
-
-DistanceMetric parse_distance_metric(char* raw_arg) {
-  if (streq(raw_arg, "euclidean"))
-    return EUCLIDEAN;
-  else if (streq(raw_arg, "manhattan"))
-    return MANHATTAN;
-  else if (streq(raw_arg, "MAHALANOBIS"))
-    return MAHALANOBIS;
-  else if (streq(raw_arg, "RAMANUJAN"))
-    return RAMANUJAN;
-
-  fprintf(stderr, "invalid distance metric %s\n", raw_arg);
-  exit(EXIT_FAILURE);
-}
 
 int parse_iterations(char* raw_arg) {
   int val = strtol(raw_arg, NULL, 10);
@@ -62,13 +39,26 @@ int find_next_arg_idx(int start_idx, int argc, char* argv[]) {
 
 IntArray* parse_point(char* raw_point) {
   char* token;
-  int temp = 0;
-  IntArray* arr = init_int_array(3);  // TODO get rid of magic number
+  IntArray* arr = init_int_array(4);  // TODO get rid of magic number
   while ((token = strtok(raw_point, ",")) != NULL) {
-    temp = strtol(token, NULL, 10);
+    int temp = (int)strtol(token, NULL, 10);
+    add_to_int_arr(arr, temp);
   }
-  // TODO dynamically resize array to get size of array
   return arr;
+}
+
+void valid_boundary(IntArray* lower_left, IntArray* upper_right) {
+  if (lower_left->size != upper_right-> size) {
+    fprintf(stderr, "lower left point and upper right point must have same number of axes");
+    exit(EXIT_FAILURE);
+  }
+
+  for (int i = 0; i < lower_left->size; i++) {
+    if (lower_left->items[i] >= upper_right->items[i]) {
+      fprintf(stderr, "%dth coodinate in lower left point is greater than upper right points", i);
+      exit(EXIT_FAILURE);
+    }
+  }
 }
 
 IntMatrix* parse_boundary(int start_idx, int argc, char* argv[]) {
@@ -80,20 +70,41 @@ IntMatrix* parse_boundary(int start_idx, int argc, char* argv[]) {
 
   IntArray* lower_left = parse_point(argv[start_idx]);
   IntArray* upper_right = parse_point(argv[start_idx + 1]);
+  valid_boundary(lower_left, upper_right);
 
-  if (lower_left->size != upper_right-> size) {
-    fprintf(stderr, "lower left point and upper right point must have same number of axes");
-    exit(EXIT_FAILURE);
-  }
+  // free original int arrays, add our own
+  // TODO make this a method?
+  IntMatrix* boundary = init_int_matrix(lower_left->size, 2);
+  free_int_array(boundary->matrix[0]);
+  free_int_array(boundary->matrix[1]);
+  boundary->matrix[0] = lower_left;
+  boundary->matrix[1] = upper_right;
 
-  // TODO turn int arrays into int matrix of size 2
+  return boundary;
+}
 
-
+IntMatrix* read_starting_centers_file(char* path) {
+  // TODO me
 }
 
 IntMatrix* parse_starting_centers(int start_idx, int argc, char* argv[]) {
-  // TODO if single arg == path
-  // TODO if multiple, try to parse
+  int end_idx = find_next_arg_idx(start_idx, argc, argv);
+
+  if (end_idx - start_idx == 1) {
+    return read_starting_centers_file(argv[start_idx]);
+  }
+
+  IntMatrix* centers = NULL;
+  IntArray* temp = NULL;
+  for (int i = start_idx; i < end_idx; i++) {
+    temp = parse_point(argv[i]);
+    if (centers == NULL) {
+      centers = init_int_matrix(temp->size, 10);
+    }
+    add_int_matrix(centers, temp);
+  }
+
+  return centers;
 }
 
 
@@ -106,11 +117,12 @@ int main(int argc, char* argv[]) {
   // use optind and argc check to parse
   DistanceMetric distance_metric = EUCLIDEAN;
   int iterations = 0;
-  bool full_output;
+  bool full_output = false;
   double convergence = .001;
   char* output_path = NULL;
   IntMatrix* starting_centers;
   IntMatrix* bounding_box;
+
   // short options - : == required, :: = optional
   char cur_arg = 0;
   while ((cur_arg = getopt_long(argc, argv, "d:c::b::i:c:of:", LONG_OPTIONS, NULL)) != -1) {
@@ -146,7 +158,15 @@ int main(int argc, char* argv[]) {
     }
   }
 
+  if (bounding_box->width != starting_centers->width) {
+    fprintf(stderr, "number of axes in boundary box does equal number of axes in starting center");
+    exit(EXIT_FAILURE);
+  }
+
+  free_int_matrix(bounding_box);
+  free_int_matrix(starting_centers);
   // TODO generate all points in bounding box
   // TODO voronoi diagram generator
+  // TODO output results
   return 0;
 }

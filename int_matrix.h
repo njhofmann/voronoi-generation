@@ -8,12 +8,15 @@
 #include "int_array.h"
 typedef struct {
   IntArray** matrix;
+  int total_height; // num of int arrays and unused spaced for int arrays
   int width; // size of each int array
   int height; // number of int arrays
 } IntMatrix;
 
 IntMatrix* init_int_matrix(int width, int height);
+IntMatrix* concat_int_matrix(IntArray** arrs);
+void add_int_matrix(IntMatrix* matrix, IntArray* arr);
 void free_int_matrix(IntMatrix* matrix);
-void insert_int_matrix(IntMatrix* matrix, int i, int j, int item);
+void insert_int_matrix(IntMatrix* matrix, int col, int row, int item);
 
 #endif //VORONOI_GENERATION__INT_MATRIX_H_

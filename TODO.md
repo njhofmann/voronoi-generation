@@ -25,11 +25,16 @@
 1. output
     1. each iteration is a 'mapping' from center if points in that cell
 
+1. to do
+    1. multithreading
+    1. boolean options for arg parser
+
 1. algorithms
+    1. naive generation
     1. lloyd's / Linde–Buzo–Gray algorithm
-    1. fortune's 
+    1. fortune's
     1. Bowyer–Watson algorithm
-    
+
 1. misc
     1. higher order voronoi diagrams
     1. weighted diagrams

@@ -7,11 +7,12 @@
 
 typedef struct a {
   int* items;
-  int size;
+  int total_size; // used + unused space
+  int size;  // used space
 } IntArray;
 
 IntArray* init_int_array(int size);
 void free_int_array(IntArray* arr);
-void insert_int_array(IntArray* arr, int idx, int item);
+void add_to_int_arr(IntArray* arr, int item);
 
 #endif //VORONOI_GENERATION__INT_ARRAY_H_
