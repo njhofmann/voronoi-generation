@@ -28,6 +28,7 @@
 1. to do
     1. multithreading
     1. boolean options for arg parser
+    1. check convergence and iterations
 
 1. algorithms
     1. naive generation
