@@ -20,6 +20,14 @@ static struct option LONG_OPTIONS[] = {
     {NULL, 0, NULL, 0}
 };
 
+static bool FOUND_OPTIONS[7] = {false, false, false, false, false, false, false};
+
+void found_option(int idx, const char* name) {
+  if (FOUND_OPTIONS[idx]) {
+    fprintf(stderr, "flag for option %s was found twice\n", name);
+    exit(EXIT_FAILURE);
+  }
+}
 
 int parse_iterations(char* raw_arg) {
   int val = strtol(raw_arg, NULL, 10);
@@ -114,6 +122,12 @@ IntMatrix* points_in_boundary(IntMatrix* box) {
 
 
 int main(int argc, char* argv[]) {
+
+  if (argc == 1) {
+    fprintf(stderr, "require some arguments");
+    exit(EXIT_FAILURE);
+  }
+
   // use optind and argc check to parse
   DistanceMetric distance_metric = EUCLIDEAN;
   int iterations = 0;
@@ -128,25 +142,32 @@ int main(int argc, char* argv[]) {
   while ((cur_arg = getopt_long(argc, argv, "d:c::b::i:c:of:", LONG_OPTIONS, NULL)) != -1) {
     switch (cur_arg) {
       case 'd':
+        found_option(0, "distance");
         distance_metric = parse_distance_metric(argv[optind]);
         break;
       case 'c':
+        found_option(1, "centers");
         starting_centers = parse_starting_centers(optind, argc, argv);
         break;
       case 'b':
+        found_option(2, "boundary");
         bounding_box = parse_boundary(optind, argc, argv);
         break;
       case 'i':
+        found_option(3, "iterations");
         iterations = parse_iterations(argv[optind]);
         break;
       case 'v':
+        found_option(4, "convergence");
         convergence = strtod(argv[optind], NULL);
         break;
       case 'o':
+        found_option(5, "output");
         output_path = malloc(strlen(argv[optind]) * sizeof(output_path));
         output_path = strcpy(output_path, argv[optind]);
         break;
       case 'f':
+        found_option(6, "full output");
         full_output = true;
         break;
       case '?':
@@ -168,5 +189,5 @@ int main(int argc, char* argv[]) {
   // TODO generate all points in bounding box
   // TODO voronoi diagram generator
   // TODO output results
-  return 0;
+  return EXIT_SUCCESS;
 }

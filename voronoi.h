@@ -6,6 +6,7 @@
 #define VORONOI_GENERATION__VORONOI_H_
 
 #include "int_matrix.h"
+#include "distance_metric.h"
 
 typedef struct {
   IntArray* center;

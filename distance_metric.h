@@ -9,7 +9,7 @@
 typedef enum {
   EUCLIDEAN = 1,
   MANHATTAN = 2,
-  MAHALANOBIS = 3,
+  SSD = 3,  // sum of squared difference
   RAMANUJAN = 4,
   CHEBYSHEV = 5,
   CANBERRA = 6,  // weighted manhattan
@@ -17,7 +17,6 @@ typedef enum {
   COSINE = 8,
   MSE = 9,  // mean squared error
   MAE = 10,  // mean absolute error
-  SSD = 11,  // sum of squared difference
 } DistanceMetric;
 
 DistanceMetric parse_distance_metric(char* raw_arg);
