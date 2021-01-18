@@ -98,26 +98,51 @@ IntMatrix* read_starting_centers_file(char* path) {
 IntMatrix* parse_starting_centers(int start_idx, int argc, char* argv[]) {
   int end_idx = find_next_arg_idx(start_idx, argc, argv);
 
-  if (end_idx - start_idx == 1) {
+  if (end_idx - start_idx == 1)
     return read_starting_centers_file(argv[start_idx]);
-  }
 
   IntMatrix* centers = NULL;
   IntArray* temp = NULL;
   for (int i = start_idx; i < end_idx; i++) {
     temp = parse_point(argv[i]);
-    if (centers == NULL) {
+    if (centers == NULL)
       centers = init_int_matrix(temp->size, 10);
-    }
     add_int_matrix(centers, temp);
   }
 
   return centers;
 }
 
+IntMatrix* add_bounds_to_int_array(IntArray* arr, int start, int end) {
+  int range_size = end - start + 1;
+  IntMatrix* expanded = init_int_matrix_from_int_arr(arr, range_size); // inclusive: [start, end]
+  for (int i = 0; i < range_size; i++)
+    add_to_int_arr(expanded->matrix[i], start + i);
+  // TODO double check matrix bounds here?
+  expanded->width = expanded->matrix[0]->size;
+  return expanded;
+}
+
 
 IntMatrix* points_in_boundary(IntMatrix* box) {
+  // TODO assume only size 2 or check?
+  // assume lower left than upper right
+  // TODO matrix width = array total_size, not size - how to fix this?
+  IntArray* lower_left = box->matrix[0];
+  IntArray* upper_right = box-> matrix[1];
+  IntMatrix* points = init_int_matrix(box->width, upper_right->items[0] - lower_left->items[0]);
 
+  // assign each item in first dimension (inclusive) to first index of each array in order of appearance
+  for (int i = 0; i <= upper_right->items[0] - lower_left->items[0] + 1; i++)
+    points->matrix[i]->items[0] = lower_left->items[0] + i;
+
+  // start in second dimension
+  for (int dim = 1; dim < box->width; dim++) {
+
+  }
+  // for each dimension
+  // add each point in current dimension to to a copy of each point in points w/ add_bounds
+  // concat each iteration
 }
 
 

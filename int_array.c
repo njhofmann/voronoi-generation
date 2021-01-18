@@ -27,6 +27,16 @@ void free_int_array(IntArray* arr) {
   free(arr);
 }
 
+
+void copy_int_arr(IntArray* src, IntArray* dest) {
+  if (dest->size < src->size) {
+    fprintf(stderr, "destination array size %d is less than source array size of %d", dest->size, src->size);
+    exit(EXIT_FAILURE);
+  }
+  memcpy(dest->items, src->items, sizeof(int) * src->size);
+}
+
+
 void add_to_int_arr(IntArray* arr, int item) {
 //  if (idx < 0) {
 //    fprintf(stderr, "index %d less than zero for array of size %d", idx, arr->size);

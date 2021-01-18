@@ -31,10 +31,7 @@
     1. check convergence and iterations
 
 1. algorithms
-    1. naive generation
-    1. lloyd's / Linde–Buzo–Gray algorithm
-    1. fortune's
-    1. Bowyer–Watson algorithm
+    1. Bowyer–Watson algorithm & lloyd's algorithm?
 
 1. misc
     1. higher order voronoi diagrams

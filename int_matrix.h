@@ -14,6 +14,7 @@ typedef struct {
 } IntMatrix;
 
 IntMatrix* init_int_matrix(int width, int height);
+IntMatrix* init_int_matrix_from_int_arr(IntArray* arr, int height);
 IntMatrix* concat_int_matrix(IntArray** arrs);
 void add_int_matrix(IntMatrix* matrix, IntArray* arr);
 void free_int_matrix(IntMatrix* matrix);

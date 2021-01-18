@@ -40,6 +40,13 @@ void add_int_matrix(IntMatrix* matrix, IntArray* arr) {
   // TODO resizing here
 }
 
+IntMatrix* init_int_matrix_from_int_arr(IntArray* arr, int height) {
+  IntMatrix* matrix = init_int_matrix(arr->size, height); // TODO total size vs size?
+  for (int i = 0; i < matrix->width; i++)
+    copy_int_arr(arr, matrix->matrix[i]);
+  return matrix;
+}
+
 void insert_int_matrix(IntMatrix* matrix, int col, int row, int item) {
   if (col < 0 || col > matrix->width) {
     fprintf(stderr, "column index %d out of bounds", col);
