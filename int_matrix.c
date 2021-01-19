@@ -4,6 +4,7 @@
 
 #include <stdlib.h>
 #include <stdio.h>
+#include <string.h>
 #include "int_matrix.h"
 
 IntMatrix* init_int_matrix(int width, int height) {
@@ -13,7 +14,7 @@ IntMatrix* init_int_matrix(int width, int height) {
   }
 
   IntMatrix* matrix = malloc(sizeof(IntMatrix));
-  matrix->width = width;
+  matrix->width = 0; // TODO arrays are initally empty
   matrix->height = height;
   matrix->matrix = malloc(sizeof(IntArray) * height);
 
@@ -56,6 +57,43 @@ void insert_int_matrix(IntMatrix* matrix, int col, int row, int item) {
     fprintf(stderr, "row index %d out of bounds", row);
     exit(EXIT_FAILURE);
   }
-
   matrix->matrix[row]->items[col] = item; // TODO insert item array
+}
+
+IntMatrix* concat_int_matrices(IntMatrix** matrices, int size) {
+  /**
+   * Concatenates all IntMatrixs in the given array to the first IntMatrix, freeing the array and all copied IntMatrixs
+   * (but keeping their inner IntArrays intact). Assumes all IntMatrixs have the same width.
+   */
+  if (size < 1) {
+    fprintf(stderr, "array of IntMatrixs must have one IntMatrix");
+    exit(EXIT_FAILURE);
+  }
+
+  // get total size of new matrix
+  IntMatrix* final = matrices[0];
+  int new_total_size = 0;
+  for (int i = 0; i < size; i++)
+    new_total_size += matrices[i]->height;
+
+  // create new empty matrix to fit all matrices, copy over 1st matrix, free original matrix (minus data)
+  IntArray** new_inner_matrix = malloc(sizeof(IntArray*) * new_total_size);
+  memcpy(new_inner_matrix, final->matrix, sizeof(IntArray*) * final->height);
+  int copy_start_idx = final->height;
+  free(final->matrix);
+  final->matrix = new_inner_matrix;
+  final->height = new_total_size;
+
+  // copy over each matrix after the first
+  for (int i = 1; i < size; i++) {
+    IntMatrix* cur_matrix = matrices[i];
+    memcpy(final->matrix[copy_start_idx],
+           cur_matrix->matrix + copy_start_idx,  // pointer arithmetic to grab address of where to start copying
+        // the next matrix
+           sizeof(IntArray*) * cur_matrix->height);
+    free(matrices[i]);
+  }
+
+  free(matrices);
+  return final;
 }

@@ -49,14 +49,14 @@ IntArray* parse_point(char* raw_point) {
   char* token;
   IntArray* arr = init_int_array(4);  // TODO get rid of magic number
   while ((token = strtok(raw_point, ",")) != NULL) {
-    int temp = (int)strtol(token, NULL, 10);
+    int temp = (int) strtol(token, NULL, 10);
     add_to_int_arr(arr, temp);
   }
   return arr;
 }
 
 void valid_boundary(IntArray* lower_left, IntArray* upper_right) {
-  if (lower_left->size != upper_right-> size) {
+  if (lower_left->size != upper_right->size) {
     fprintf(stderr, "lower left point and upper right point must have same number of axes");
     exit(EXIT_FAILURE);
   }
@@ -123,28 +123,34 @@ IntMatrix* add_bounds_to_int_array(IntArray* arr, int start, int end) {
   return expanded;
 }
 
-
 IntMatrix* points_in_boundary(IntMatrix* box) {
-  // TODO assume only size 2 or check?
-  // assume lower left than upper right
-  // TODO matrix width = array total_size, not size - how to fix this?
+  if (box->height != 2) {
+    fprintf(stderr, "bounding box must have exact two points\n");
+    exit(EXIT_FAILURE);
+  }
+
   IntArray* lower_left = box->matrix[0];
-  IntArray* upper_right = box-> matrix[1];
-  IntMatrix* points = init_int_matrix(box->width, upper_right->items[0] - lower_left->items[0]);
+  IntArray* upper_right = box->matrix[1];
+  int first_dim_size = upper_right->items[0] - lower_left->items[0] + 1;
+  IntMatrix* points = init_int_matrix(box->width, first_dim_size);
 
   // assign each item in first dimension (inclusive) to first index of each array in order of appearance
-  for (int i = 0; i <= upper_right->items[0] - lower_left->items[0] + 1; i++)
-    points->matrix[i]->items[0] = lower_left->items[0] + i;
+  for (int i = 0; i <= first_dim_size; i++)
+    add_to_int_arr(points->matrix[i], lower_left->items[0] + 1);
 
   // start in second dimension
+  // for each dimension, add entire range of that dimension to each item in the existing array of points
   for (int dim = 1; dim < box->width; dim++) {
-
+    int matrix_count = points->height;
+    IntMatrix* temps[matrix_count];// = malloc(sizeof(IntMatrix*) * matrix_count);
+    for (int i = 0; i < points->height; i++)
+      temps[i] = add_bounds_to_int_array(points->matrix[i], lower_left->items[dim], upper_right->items[dim]);
+    free_int_matrix(points);
+    points = concat_int_matrices(temps, matrix_count);
   }
-  // for each dimension
-  // add each point in current dimension to to a copy of each point in points w/ add_bounds
-  // concat each iteration
-}
 
+  return points;
+}
 
 int main(int argc, char* argv[]) {
 
@@ -209,6 +215,9 @@ int main(int argc, char* argv[]) {
     exit(EXIT_FAILURE);
   }
 
+  IntMatrix* points = points_in_boundary(bounding_box);
+
+  free_int_matrix(points);
   free_int_matrix(bounding_box);
   free_int_matrix(starting_centers);
   // TODO generate all points in bounding box
