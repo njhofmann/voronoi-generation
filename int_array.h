@@ -15,5 +15,6 @@ IntArray* init_int_array(int size);
 void free_int_array(IntArray* arr);
 void add_to_int_arr(IntArray* arr, int item);
 void copy_int_arr(IntArray* src, IntArray* dest);
+void print_int_arr(IntArray* arr);
 
 #endif //VORONOI_GENERATION__INT_ARRAY_H_

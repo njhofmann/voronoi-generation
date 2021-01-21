@@ -13,10 +13,11 @@ IntMatrix* init_int_matrix(int width, int height) {
     exit(EXIT_FAILURE);
   }
 
-  IntMatrix* matrix = malloc(sizeof(IntMatrix));
+  IntMatrix * matrix = malloc(sizeof(IntMatrix));
   matrix->width = 0; // TODO arrays are initally empty
   matrix->height = height;
-  matrix->matrix = malloc(sizeof(IntArray) * height);
+  matrix->total_height = height;
+  matrix->matrix = malloc(sizeof(IntArray*) * height);
 
   for (int i = 0; i < height; i++)
     matrix->matrix[i] = init_int_array(width);
@@ -31,6 +32,22 @@ void free_int_matrix(IntMatrix* matrix) {
   free(matrix);
 }
 
+IntMatrix* init_empty_int_matrix(IntArray** arrs, int count) {
+  for (int i = 1; i < count; i++) {
+    if (arrs[i]->size != arrs[i - 1]->size) {
+      fprintf(stderr, "inserted int arrays must be of the same size");
+      exit(EXIT_FAILURE);
+    }
+  }
+
+  IntMatrix * matrix = malloc(sizeof(IntMatrix));
+  matrix->width = arrs[0]->size;
+  matrix->height = count;
+  matrix->total_height = count;
+  matrix->matrix = arrs;
+  return matrix;
+}
+
 void add_int_matrix(IntMatrix* matrix, IntArray* arr) {
   if (matrix->width != arr->size) {
     fprintf(stderr, "inserted array of size %d must be same size %d as width of the matrix",
@@ -43,7 +60,7 @@ void add_int_matrix(IntMatrix* matrix, IntArray* arr) {
 
 IntMatrix* init_int_matrix_from_int_arr(IntArray* arr, int height) {
   IntMatrix* matrix = init_int_matrix(arr->size, height); // TODO total size vs size?
-  for (int i = 0; i < matrix->width; i++)
+  for (int i = 0; i < height; i++)
     copy_int_arr(arr, matrix->matrix[i]);
   return matrix;
 }
@@ -58,6 +75,11 @@ void insert_int_matrix(IntMatrix* matrix, int col, int row, int item) {
     exit(EXIT_FAILURE);
   }
   matrix->matrix[row]->items[col] = item; // TODO insert item array
+}
+
+void print_int_matrix(IntMatrix* matrix) {
+  for (int i = 0; i < matrix->height; i++)
+    print_int_arr(matrix->matrix[i]);
 }
 
 IntMatrix* concat_int_matrices(IntMatrix** matrices, int size) {
@@ -87,13 +109,11 @@ IntMatrix* concat_int_matrices(IntMatrix** matrices, int size) {
   // copy over each matrix after the first
   for (int i = 1; i < size; i++) {
     IntMatrix* cur_matrix = matrices[i];
-    memcpy(final->matrix[copy_start_idx],
-           cur_matrix->matrix + copy_start_idx,  // pointer arithmetic to grab address of where to start copying
-        // the next matrix
-           sizeof(IntArray*) * cur_matrix->height);
+    // pointer arithmetic to find location that was last left
+    memcpy(final->matrix + copy_start_idx, cur_matrix->matrix, sizeof(IntArray*) * cur_matrix->height);
     free(matrices[i]);
+    copy_start_idx += cur_matrix->height;
   }
 
-  free(matrices);
   return final;
 }

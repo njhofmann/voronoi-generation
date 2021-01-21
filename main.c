@@ -46,11 +46,11 @@ int find_next_arg_idx(int start_idx, int argc, char* argv[]) {
 }
 
 IntArray* parse_point(char* raw_point) {
-  char* token;
   IntArray* arr = init_int_array(4);  // TODO get rid of magic number
-  while ((token = strtok(raw_point, ",")) != NULL) {
-    int temp = (int) strtol(token, NULL, 10);
-    add_to_int_arr(arr, temp);
+  char* token = strtok(raw_point, ",");
+  while (token != NULL) {
+    add_to_int_arr(arr, (int) strtol(token, NULL, 10));
+    token = strtok(NULL, ",");
   }
   return arr;
 }
@@ -87,6 +87,7 @@ IntMatrix* parse_boundary(int start_idx, int argc, char* argv[]) {
   free_int_array(boundary->matrix[1]);
   boundary->matrix[0] = lower_left;
   boundary->matrix[1] = upper_right;
+  boundary->width = lower_left->size;  // TODO fix how matrix size works
 
   return boundary;
 }
@@ -101,16 +102,12 @@ IntMatrix* parse_starting_centers(int start_idx, int argc, char* argv[]) {
   if (end_idx - start_idx == 1)
     return read_starting_centers_file(argv[start_idx]);
 
-  IntMatrix* centers = NULL;
+  int arr_count = end_idx - start_idx;
+  IntArray** centers = malloc(sizeof(IntArray*) * arr_count);
   IntArray* temp = NULL;
-  for (int i = start_idx; i < end_idx; i++) {
-    temp = parse_point(argv[i]);
-    if (centers == NULL)
-      centers = init_int_matrix(temp->size, 10);
-    add_int_matrix(centers, temp);
-  }
-
-  return centers;
+  for (int i = 0; i < arr_count; i++)
+    centers[i] = parse_point(argv[i + start_idx]);
+  return init_empty_int_matrix(centers, arr_count);
 }
 
 IntMatrix* add_bounds_to_int_array(IntArray* arr, int start, int end) {
@@ -135,8 +132,8 @@ IntMatrix* points_in_boundary(IntMatrix* box) {
   IntMatrix* points = init_int_matrix(box->width, first_dim_size);
 
   // assign each item in first dimension (inclusive) to first index of each array in order of appearance
-  for (int i = 0; i <= first_dim_size; i++)
-    add_to_int_arr(points->matrix[i], lower_left->items[0] + 1);
+  for (int i = 0; i < first_dim_size; i++)
+    add_to_int_arr(points->matrix[i], lower_left->items[0] + i);
 
   // start in second dimension
   // for each dimension, add entire range of that dimension to each item in the existing array of points
