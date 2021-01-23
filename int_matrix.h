@@ -18,7 +18,6 @@ IntMatrix* init_int_matrix_from_int_arr(IntArray* arr, int height);
 IntMatrix* init_empty_int_matrix(IntArray** arrs, int count);
 void add_int_matrix(IntMatrix* matrix, IntArray* arr);
 void free_int_matrix(IntMatrix* matrix);
-void insert_int_matrix(IntMatrix* matrix, int col, int row, int item);
 IntMatrix* concat_int_matrices(IntMatrix** matrices, int size);
 void print_int_matrix(IntMatrix* matrix);
 

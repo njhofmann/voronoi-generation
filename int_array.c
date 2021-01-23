@@ -35,10 +35,7 @@ void print_int_arr(IntArray* arr) {
 
 void copy_int_arr(IntArray* src, IntArray* dest) {
   if (dest->total_size < src->size) {
-    fprintf(stderr,
-            "destination array total size %d is less than source array size of %d",
-            dest->total_size,
-            src->size);
+    fprintf(stderr,"dest array's total size %d less than source array size of %d", dest->total_size, src->size);
     exit(EXIT_FAILURE);
   }
   dest->size = src->size;
@@ -46,12 +43,8 @@ void copy_int_arr(IntArray* src, IntArray* dest) {
 }
 
 void add_to_int_arr(IntArray* arr, int item) {
-//  if (idx < 0) {
-//    fprintf(stderr, "index %d less than zero for array of size %d", idx, arr->size);
-//    exit(EXIT_FAILURE);
-//  }
   if (arr->size >= arr->total_size) {
-    int new_size = (int) round(INT_ARR_RESIZE_CONST * arr->total_size);
+    int new_size = (int) ceil(INT_ARR_RESIZE_CONST * arr->total_size);
     int* temp = calloc(new_size, sizeof(int));
     memcpy(temp, arr->items, sizeof(int) * arr->total_size);
     free(arr->items);

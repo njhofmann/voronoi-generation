@@ -13,6 +13,6 @@ typedef struct {
   IntMatrix* points;
 } Cell;
 
-Cell* voronoi_diagram(IntMatrix* centers, IntMatrix* points, DistanceMetric metric);
+Cell** voronoi_diagram(IntMatrix* centers, IntMatrix* points, DistanceMetric metric);
 
 #endif //VORONOI_GENERATION__VORONOI_H_

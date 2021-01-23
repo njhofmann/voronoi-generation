@@ -27,6 +27,7 @@
 
 1. to do
     1. redo matrix width
+       1. make rows point to null, only append 
         1. tension between int arrays that are being resized and int matrix
         1. how to create a new empty int matrix with a "width" if width relies on int arrays
     1. multithreading?

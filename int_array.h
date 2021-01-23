@@ -5,7 +5,7 @@
 #ifndef VORONOI_GENERATION__INT_ARRAY_H_
 #define VORONOI_GENERATION__INT_ARRAY_H_
 
-typedef struct a {
+typedef struct {
   int* items;
   int total_size; // used + unused space
   int size;  // used space
