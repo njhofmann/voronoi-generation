@@ -5,7 +5,11 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
+#include <math.h>
 #include "int_matrix.h"
+
+static const int UNSET_MATRIX_WIDTH = -1;
+static const double RESIZE_FACTOR = 1.4;
 
 IntMatrix* init_int_matrix(int width, int height) {
   if (width < 0 || height < 0) {
@@ -25,14 +29,18 @@ IntMatrix* init_int_matrix(int width, int height) {
   return matrix;
 }
 
-void free_int_matrix(IntMatrix* matrix) {
-  for (int i = 0; i < matrix->height; i++)
-    free_int_array(matrix->matrix[i]);
+void free_int_matrix_no_data(IntMatrix* matrix) {
   free(matrix->matrix);
   free(matrix);
 }
 
-IntMatrix* init_empty_int_matrix(IntArray** arrs, int count) {
+void free_int_matrix(IntMatrix* matrix) {
+  for (int i = 0; i < matrix->height; i++)
+    free_int_array(matrix->matrix[i]);
+  free_int_matrix_no_data(matrix);
+}
+
+IntMatrix* init_int_matrix_from_int_arrs(IntArray** arrs, int count) {
   for (int i = 1; i < count; i++)
     if (arrs[i]->size != arrs[i - 1]->size) {
       fprintf(stderr, "inserted int arrays must be of the same size");
@@ -48,12 +56,26 @@ IntMatrix* init_empty_int_matrix(IntArray** arrs, int count) {
 }
 
 void add_int_matrix(IntMatrix* matrix, IntArray* arr) {
-  if (matrix->width != arr->size) {
+  if (matrix->width != UNSET_MATRIX_WIDTH && matrix->width != arr->size) {
     fprintf(stderr, "inserted array's size %d must equal matrix width %d", arr->size, matrix->width);
     exit(EXIT_FAILURE);
   }
 
-  // TODO resizing here
+  if (matrix->width == UNSET_MATRIX_WIDTH)
+    matrix->width = arr->size;
+
+  if (matrix->height == matrix->total_height) {
+    int new_total_height = ceil(matrix->total_height * RESIZE_FACTOR);
+    IntArray** new_matrix = malloc(sizeof(IntArray*) * new_total_height);
+    memcpy(new_matrix, matrix->matrix, sizeof(IntArray*) * matrix->height);
+    free(matrix->matrix);
+    matrix->matrix = new_matrix;
+    matrix->total_height = new_total_height;
+  }
+
+  // TODO copy over or just take pointer?
+  matrix->matrix[matrix->height] = arr;
+  matrix->height++;
 }
 
 IntMatrix* init_int_matrix_from_int_arr(IntArray* arr, int height) {
@@ -66,6 +88,15 @@ IntMatrix* init_int_matrix_from_int_arr(IntArray* arr, int height) {
 void print_int_matrix(IntMatrix* matrix) {
   for (int i = 0; i < matrix->height; i++)
     print_int_arr(matrix->matrix[i]);
+}
+
+IntMatrix* init_empty_int_matrix(int height) {
+  IntMatrix* matrix = malloc(sizeof(IntMatrix));
+  matrix->total_height = height;
+  matrix->width = -1;
+  matrix->height = 0;
+  matrix->matrix = malloc(sizeof(IntArray*) * height);
+  return matrix;
 }
 
 IntMatrix* concat_int_matrices(IntMatrix** matrices, int size) {

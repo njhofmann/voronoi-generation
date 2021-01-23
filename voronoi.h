@@ -13,6 +13,12 @@ typedef struct {
   IntMatrix* points;
 } Cell;
 
-Cell** voronoi_diagram(IntMatrix* centers, IntMatrix* points, DistanceMetric metric);
+typedef struct {
+  Cell** cells;
+  int size;
+} Cells;
+
+Cells* create_voronoi_diagram(IntMatrix* centers, IntMatrix* points, DistanceMetric metric);
+void free_cells(Cells* cells);
 
 #endif //VORONOI_GENERATION__VORONOI_H_

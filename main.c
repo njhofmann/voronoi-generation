@@ -7,6 +7,7 @@
 #include "int_array.h"
 #include "int_matrix.h"
 #include "distance_metric.h"
+#include "voronoi.h"
 
 static struct option LONG_OPTIONS[] = {
     // flag = NULL means val is used to id if arg is included
@@ -107,7 +108,7 @@ IntMatrix* parse_starting_centers(int start_idx, int argc, char* argv[]) {
   IntArray* temp = NULL;
   for (int i = 0; i < arr_count; i++)
     centers[i] = parse_point(argv[i + start_idx]);
-  return init_empty_int_matrix(centers, arr_count);
+  return init_int_matrix_from_int_arrs(centers, arr_count);
 }
 
 IntMatrix* add_bounds_to_int_array(IntArray* arr, int start, int end) {
@@ -213,7 +214,9 @@ int main(int argc, char* argv[]) {
   }
 
   IntMatrix* points = points_in_boundary(bounding_box);
+  Cells* voronoi_diagram = create_voronoi_diagram(starting_centers, points, distance_metric);
 
+  free_cells(voronoi_diagram); // doesn't free underlying points or centers
   free_int_matrix(points);
   free_int_matrix(bounding_box);
   free_int_matrix(starting_centers);
