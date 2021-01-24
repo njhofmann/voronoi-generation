@@ -51,6 +51,44 @@ Cells* create_voronoi_diagram(IntMatrix* centers, IntMatrix* points, DistanceMet
   return cells;
 }
 
+IntArray* compute_center(Cell* cell) {
+  IntArray* center = init_int_array(cell->points->width);
+  center->size = cell->points->width;
+  for (int i = 0; i < cell->points->height; i++)
+    for (int j = 0; j < center->size; j++)
+      center->items[j] += cell->points->matrix[i]->items[j];
+
+  for (int j = 0; j < center->size; j++)
+    center->items[j] /= cell->points->height;
+
+  return center;
+}
+
+IntMatrix* compute_centers(Cells* cells) {
+  IntMatrix* centers = init_empty_int_matrix(cells->size);
+  for (int i = 0; i < cells->size; i++)
+    add_int_matrix(centers, compute_center(cells->cells[i]));
+  return centers;
+}
+
+void voronoi_relaxation(IntMatrix* points, IntMatrix* centers, DistanceMetric metric, int iterations,
+                        double convergence, FILE* stream) {
+  double delta_dist = 0.0;
+  while ((convergence > 0.0 && delta_dist > convergence) || iterations > 0) {
+    Cells* voronoi_diagram = create_voronoi_diagram(centers, points, metric);
+    IntMatrix* new_centers = compute_centers(voronoi_diagram);
+
+    // TODO print info here
+
+    free_cells(voronoi_diagram);
+    free_int_matrix(centers);
+    centers = new_centers;
+
+    if (iterations >= 0)
+      iterations--;
+  }
+}
+
 void free_cell(Cell* cell) {
   /**
    * Free the given Cell and its underlying IntMatrix, but not the center point or the points underlying the IntMatrix
@@ -64,8 +102,8 @@ void free_cells(Cells* cells) {
    * Frees the given array of Cells, but not the underlying IntArrays. Assumes the latter are freed by other data
    * structures.
    */
-   for (int i = 0; i < cells->size; i++)
-     free_cell(cells->cells[i]);
-   free(cells->cells);
+  for (int i = 0; i < cells->size; i++)
+    free_cell(cells->cells[i]);
+  free(cells->cells);
   free(cells);
 }
