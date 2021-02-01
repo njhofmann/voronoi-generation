@@ -3,6 +3,7 @@
 //
 
 #include <stdlib.h>
+#include <math.h>
 #include "voronoi.h"
 
 static const int STARTING_CELL_SIZE = 10;
@@ -59,7 +60,7 @@ IntArray* compute_center(Cell* cell) {
       center->items[j] += cell->points->matrix[i]->items[j];
 
   for (int j = 0; j < center->size; j++)
-    center->items[j] /= cell->points->height;
+    center->items[j] = round(center->items[j] / (1.0 * cell->points->height));
 
   return center;
 }
@@ -71,14 +72,25 @@ IntMatrix* compute_centers(Cells* cells) {
   return centers;
 }
 
+void print_cell(Cell* cell, FILE* output_file) {
+  // TODO how to print cell
+}
+
+void print_cells(Cells* cells, FILE* output_file) {
+  for (int i = 0; i < cells->size; i++)
+    print_cell(cells->cells[i], output_file);
+
+  for (int i = 0; i < 2; i++)
+    fputc('\n', output_file);
+}
+
 void voronoi_relaxation(IntMatrix* points, IntMatrix* centers, DistanceMetric metric, int iterations,
                         double convergence, FILE* stream) {
   double delta_dist = 0.0;
   while ((convergence > 0.0 && delta_dist > convergence) || iterations > 0) {
     Cells* voronoi_diagram = create_voronoi_diagram(centers, points, metric);
     IntMatrix* new_centers = compute_centers(voronoi_diagram);
-
-    // TODO print info here
+    print_cells(voronoi_diagram, stream);
 
     free_cells(voronoi_diagram);
     free_int_matrix(centers);

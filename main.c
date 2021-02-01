@@ -150,6 +150,16 @@ IntMatrix* points_in_boundary(IntMatrix* box) {
   return points;
 }
 
+FILE* check_file_path(char* file_path) {
+  FILE* file;
+  // "x" forces error if file already exists
+  if ((file = fopen(file_path, "wx")) == NULL) {
+    fprintf(stderr, "failed to open file at %s\n", file_path);
+    exit(EXIT_FAILURE);
+  }
+  return file;
+}
+
 int main(int argc, char* argv[]) {
 
   if (argc == 1) {
@@ -162,7 +172,7 @@ int main(int argc, char* argv[]) {
   int iterations = 0;
   bool full_output = false;
   double convergence = .001;
-  char* output_path = NULL;
+  FILE* output_file = stdout;
   IntMatrix* starting_centers;
   IntMatrix* bounding_box;
 
@@ -192,8 +202,9 @@ int main(int argc, char* argv[]) {
         break;
       case 'o':
         found_option(5, "output");
-        output_path = malloc(strlen(argv[optind]) * sizeof(output_path));
-        output_path = strcpy(output_path, argv[optind]);
+        output_file = check_file_path(argv[optind]);
+//        output_file = malloc(strlen(argv[optind]) * sizeof(output_file));
+//        output_file = strcpy(output_file, argv[optind]);
         break;
       case 'f':
         found_option(6, "full output");
@@ -214,14 +225,13 @@ int main(int argc, char* argv[]) {
   }
 
   IntMatrix* points = points_in_boundary(bounding_box);
-  Cells* voronoi_diagram = create_voronoi_diagram(starting_centers, points, distance_metric);
-
-  free_cells(voronoi_diagram); // doesn't free underlying points or centers
+  voronoi_relaxation(points, starting_centers, distance_metric, iterations, convergence, output_file);
+//  Cells* voronoi_diagram = create_voronoi_diagram(starting_centers, points, distance_metric);
+//
+//  free_cells(voronoi_diagram); // doesn't free underlying points or centers
+  fclose(output_file);
   free_int_matrix(points);
   free_int_matrix(bounding_box);
   free_int_matrix(starting_centers);
-  // TODO generate all points in bounding box
-  // TODO voronoi diagram generator
-  // TODO output results
   return EXIT_SUCCESS;
 }
