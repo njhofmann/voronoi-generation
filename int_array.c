@@ -54,3 +54,11 @@ void add_to_int_arr(IntArray* arr, int item) {
   arr->items[arr->size] = item;
   arr->size++;
 }
+
+void write_int_arr(IntArray* arr, FILE* file) {
+  for (int i = 0; i < arr->size; i++) {
+    fprintf(file, "%d", arr->items[i]);
+    if (i != arr->size - 1)
+      fputc(',', file);
+  }
+}

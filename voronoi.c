@@ -73,7 +73,18 @@ IntMatrix* compute_centers(Cells* cells) {
 }
 
 void print_cell(Cell* cell, FILE* output_file) {
-  // TODO how to print cell
+  /*
+   * center | a1,a2,a3 b1,b2,b3 ...
+   * center | a1,a2,a3 b1,b2,b3 ...
+   * ...
+   */
+  write_int_arr(cell->center, output_file);
+  fprintf(output_file, " | ");
+  for (int i = 0; i < cell->points->height; i++) {
+    write_int_arr(cell->points->matrix[i], output_file);  // TODO write int matrix
+    fputc(' ', output_file);
+  }
+  fputc('\n', output_file);
 }
 
 void print_cells(Cells* cells, FILE* output_file) {
@@ -87,9 +98,10 @@ void print_cells(Cells* cells, FILE* output_file) {
 void voronoi_relaxation(IntMatrix* points, IntMatrix* centers, DistanceMetric metric, int iterations,
                         double convergence, FILE* stream) {
   double delta_dist = 0.0;
+  IntMatrix* new_centers;
   while ((convergence > 0.0 && delta_dist > convergence) || iterations > 0) {
     Cells* voronoi_diagram = create_voronoi_diagram(centers, points, metric);
-    IntMatrix* new_centers = compute_centers(voronoi_diagram);
+    new_centers = compute_centers(voronoi_diagram);
     print_cells(voronoi_diagram, stream);
 
     free_cells(voronoi_diagram);
@@ -99,6 +111,14 @@ void voronoi_relaxation(IntMatrix* points, IntMatrix* centers, DistanceMetric me
     if (iterations >= 0)
       iterations--;
   }
+
+  if (new_centers != NULL)
+    free_int_matrix(new_centers);
+
+  for (int i = 0; i < points->height; i++)
+    free_int_array(points->matrix[i]);
+  free(points->matrix);
+  free(points);
 }
 
 void free_cell(Cell* cell) {

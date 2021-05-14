@@ -35,6 +35,7 @@ void free_int_matrix_no_data(IntMatrix* matrix) {
 }
 
 void free_int_matrix(IntMatrix* matrix) {
+  print_int_matrix(matrix);
   for (int i = 0; i < matrix->height; i++)
     free_int_array(matrix->matrix[i]);
   free_int_matrix_no_data(matrix);

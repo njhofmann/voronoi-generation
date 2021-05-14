@@ -8,6 +8,7 @@
 #include "int_matrix.h"
 #include "distance_metric.h"
 #include "voronoi.h"
+#include "parse.h"
 
 static struct option LONG_OPTIONS[] = {
     // flag = NULL means val is used to id if arg is included
@@ -30,44 +31,17 @@ void found_option(int idx, const char* name) {
   }
 }
 
-int parse_iterations(char* raw_arg) {
-  int val = strtol(raw_arg, NULL, 10);
-  if (val < -1) {
-    fprintf(stderr, "number of iterations must be >= -1");
-    exit(EXIT_FAILURE);
-  }
-  return val;
-}
-
-int find_next_arg_idx(int start_idx, int argc, char* argv[]) {
-  int end_idx = start_idx;
-  while (end_idx < argc && argv[end_idx][0] != '-')
-    end_idx++;
-  return end_idx;
-}
-
-IntArray* parse_point(char* raw_point) {
-  IntArray* arr = init_int_array(4);  // TODO get rid of magic number
-  char* token = strtok(raw_point, ",");
-  while (token != NULL) {
-    add_to_int_arr(arr, (int) strtol(token, NULL, 10));
-    token = strtok(NULL, ",");
-  }
-  return arr;
-}
-
 void valid_boundary(IntArray* lower_left, IntArray* upper_right) {
   if (lower_left->size != upper_right->size) {
     fprintf(stderr, "lower left point and upper right point must have same number of axes");
     exit(EXIT_FAILURE);
   }
 
-  for (int i = 0; i < lower_left->size; i++) {
+  for (int i = 0; i < lower_left->size; i++)
     if (lower_left->items[i] >= upper_right->items[i]) {
       fprintf(stderr, "%dth coodinate in lower left point is greater than upper right points", i);
       exit(EXIT_FAILURE);
     }
-  }
 }
 
 IntMatrix* parse_boundary(int start_idx, int argc, char* argv[]) {
@@ -94,7 +68,74 @@ IntMatrix* parse_boundary(int start_idx, int argc, char* argv[]) {
 }
 
 IntMatrix* read_starting_centers_file(char* path) {
-  // TODO me
+  FILE* file = fopen(path, "r");
+  if (file == NULL) {
+    fprintf(stderr, "file %s doesn't exist", path);
+    exit(EXIT_FAILURE);
+  }
+
+  // number points from first array / line
+  int arr_sz = 0;
+  char cur_char;
+  bool prev_char_int = true;
+  cur_char = fgetc(file);
+  bool some_input = false;
+  while (cur_char != '\n' && cur_char != EOF) {
+    some_input = true;
+    if (cur_char == ',') {
+      if (prev_char_int) {
+        fprintf(stderr, "two commas in a row in centers file");
+        exit(EXIT_FAILURE);
+      }
+      arr_sz += 1;
+    }
+    else {
+      prev_char_int = false;
+    }
+    cur_char = fgetc(file);
+  }
+
+  // count last variable
+  if (some_input)
+    arr_sz++;
+
+  if (arr_sz == 0) {
+    fprintf(stderr, "no inputs on first line");
+    exit(EXIT_FAILURE);
+  }
+
+  rewind(file);
+
+  // read in line by line, convert to int array and add to matrix
+  IntMatrix* centers = init_empty_int_matrix(10);
+  // TODO make these functions
+  char point_holder[20];  // TODO long enough
+  while (fscanf(file, "%[^\n] ", &point_holder[0]) != EOF) {
+    IntArray* cur_center = init_int_array(arr_sz);
+
+    int idx = 0;
+    char* cur_token = strtok(&point_holder[0], ",");
+    while (cur_token != NULL) {
+      int cur_var = strtol(cur_token, NULL, 0);
+      add_to_int_arr(cur_center, cur_var);
+      idx++;
+      cur_token = strtok(NULL, ",");
+    }
+
+    if (idx != arr_sz || cur_center->size != arr_sz) {
+      fprintf(stderr, "expected %d points in centers file but got %d", arr_sz, idx);
+      exit(EXIT_FAILURE);
+    }
+
+    add_int_matrix(centers, cur_center);
+  }
+
+  if (fclose(file) != 0) {
+    fprintf(stderr, "failed to close file %s", path);
+    exit(EXIT_FAILURE);
+  }
+
+  return centers;
 }
 
 IntMatrix* parse_starting_centers(int start_idx, int argc, char* argv[]) {
@@ -105,7 +146,6 @@ IntMatrix* parse_starting_centers(int start_idx, int argc, char* argv[]) {
 
   int arr_count = end_idx - start_idx;
   IntArray** centers = malloc(sizeof(IntArray*) * arr_count);
-  IntArray* temp = NULL;
   for (int i = 0; i < arr_count; i++)
     centers[i] = parse_point(argv[i + start_idx]);
   return init_int_matrix_from_int_arrs(centers, arr_count);
@@ -193,8 +233,9 @@ int main(int argc, char* argv[]) {
         bounding_box = parse_boundary(optind, argc, argv);
         break;
       case 'i':
+        printf("%c", argv);
         found_option(3, "iterations");
-        iterations = parse_iterations(argv[optind]);
+        iterations = parse_iterations(argv[optind - 1]);
         break;
       case 'v':
         found_option(4, "convergence");
@@ -230,8 +271,7 @@ int main(int argc, char* argv[]) {
 //
 //  free_cells(voronoi_diagram); // doesn't free underlying points or centers
   fclose(output_file);
-  free_int_matrix(points);
+  //free_int_matrix(points);
   free_int_matrix(bounding_box);
-  free_int_matrix(starting_centers);
   return EXIT_SUCCESS;
 }

@@ -34,7 +34,9 @@
         1. tension between int arrays that are being resized and int matrix
         1. how to create a new empty int matrix with a "width" if width relies on int arrays
     1. multithreading?
-    1. boolean options for arg parser
+    1. finish input parsing   
+    1. bug checks 
+    1. performance checks   
     1. check convergence and iterations
 
 1. algorithms
