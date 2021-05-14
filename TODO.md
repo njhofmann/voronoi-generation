@@ -22,25 +22,16 @@
         1. show all iterations
             1. output only final diagram, or each intermediate diagram
 
-1. output
-    1. each iteration is a 'mapping' from center if points in that cell
-    1. space between cells 
-    1. two spaces between generations? 
-    1. cell is first point in each cell group?
-
 1. to do
+    1. help option
     1. redo matrix width
         1. make rows point to null, only append
         1. tension between int arrays that are being resized and int matrix
         1. how to create a new empty int matrix with a "width" if width relies on int arrays
     1. multithreading?
-    1. finish input parsing   
-    1. bug checks 
-    1. performance checks   
-    1. check convergence and iterations
-
-1. algorithms
-    1. Bowyer–Watson algorithm & lloyd's algorithm?
+    1. bug checks
+    1. performance checks
+    1. docs
 
 1. misc
     1. higher order voronoi diagrams

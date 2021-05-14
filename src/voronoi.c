@@ -99,40 +99,16 @@ double center_dist(IntArray* a, IntArray* b) {
 }
 
 bool convergence_threshold_met(double converge_threshold, IntMatrix* old_centers, IntMatrix* new_centers) {
+  if (converge_threshold < 0.0)
+    return false;
   for (int i = 0; i < old_centers->height; i++)
     if (converge_threshold > center_dist(old_centers->matrix[i], new_centers->matrix[i]))
       return true;
   return false;
 }
 
-void voronoi_relaxation(IntMatrix* points, IntMatrix* centers, DistanceMetric metric, int iterations,
-                        double converge_threshold, FILE* stream) {
-  bool converged = false;  //
-  IntMatrix* new_centers;
-  while ((converge_threshold > 0.0 && !converged) || iterations > 0) {
-    Cells* voronoi_diagram = create_voronoi_diagram(centers, points, metric);
-    new_centers = compute_centers(voronoi_diagram);
-    print_cells(voronoi_diagram, stream);
-
-    if (converge_threshold > 0.0)
-      converged = convergence_threshold_met(converge_threshold, centers, new_centers);
-
-    free_cells(voronoi_diagram);
-    free_int_matrix(centers);
-
-    centers = new_centers;
-
-    if (iterations >= 0)
-      iterations--;
-  }
-
-  if (new_centers != NULL)
-    free_int_matrix(new_centers);
-
-  for (int i = 0; i < points->height; i++)
-    free_int_array(points->matrix[i]);
-  free(points->matrix);
-  free(points);
+bool relaxation_finished(int iterations, bool converged) {
+  return iterations == 0 || converged;
 }
 
 void free_cell(Cell* cell) {
@@ -152,4 +128,38 @@ void free_cells(Cells* cells) {
     free_cell(cells->cells[i]);
   free(cells->cells);
   free(cells);
+}
+
+void voronoi_relaxation(IntMatrix* points, IntMatrix* centers, DistanceMetric metric, int iterations,
+                        double converge_threshold, FILE* stream, bool full_output) {
+  bool converged = false;  //
+  IntMatrix* new_centers;
+  bool finished = false;
+  while (!finished) {
+  //while ((converge_threshold > 0.0 && !converged) || iterations > 0) {
+    Cells* voronoi_diagram = create_voronoi_diagram(centers, points, metric);
+    new_centers = compute_centers(voronoi_diagram);
+
+    converged = convergence_threshold_met(converge_threshold, centers, new_centers);
+    if (iterations > 0)
+      iterations--;
+
+    finished = relaxation_finished(iterations, converged);
+
+    if (full_output || finished)
+      print_cells(voronoi_diagram, stream);
+
+    free_cells(voronoi_diagram);
+    free_int_matrix(centers);
+
+    centers = new_centers;
+  }
+
+  if (new_centers != NULL)
+    free_int_matrix(new_centers);
+
+  for (int i = 0; i < points->height; i++)
+    free_int_array(points->matrix[i]);
+  free(points->matrix);
+  free(points);
 }

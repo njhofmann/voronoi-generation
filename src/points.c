@@ -7,7 +7,7 @@
 #include "points.h"
 
 IntMatrix* add_bounds_to_int_array(IntArray* arr, int start, int end) {
-  int range_size = end - start + 1;
+  int range_size = end - start;
   IntMatrix* expanded = init_int_matrix_from_int_arr(arr, range_size); // inclusive: [start, end]
   for (int i = 0; i < range_size; i++)
     add_to_int_arr(expanded->matrix[i], start + i);
@@ -29,7 +29,7 @@ IntMatrix* get_points_in_bounding_box(IntMatrix* box) {
 
   IntArray* lower_left = box->matrix[0];
   IntArray* upper_right = box->matrix[1];
-  int first_dim_size = upper_right->items[0] - lower_left->items[0] + 1;
+  int first_dim_size = upper_right->items[0] - lower_left->items[0];
   IntMatrix* points = init_int_matrix(box->width, first_dim_size);
 
   // assign each item in first dimension (inclusive) to first index of each array in order of appearance

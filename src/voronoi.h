@@ -19,9 +19,6 @@ typedef struct {
   int size;
 } Cells;
 
-Cells* create_voronoi_diagram(IntMatrix* centers, IntMatrix* points, DistanceMetric metric);
 void voronoi_relaxation(IntMatrix* points, IntMatrix* centers, DistanceMetric metric, int iterations,
-                        double converge_threshold, FILE* stream);
-void free_cells(Cells* cells);
-
+                        double converge_threshold, FILE* stream, bool full_output);
 #endif //VORONOI_GENERATION__VORONOI_H_
