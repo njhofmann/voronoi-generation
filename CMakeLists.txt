@@ -3,5 +3,5 @@ project(voronoi_generation C)
 
 set(CMAKE_C_STANDARD 11)
 
-add_executable(voronoi_generation main.c int_array.h int_array.c int_matrix.c int_matrix.h voronoi.c voronoi.h distance_metric.c distance_metric.h parse.h parse.c)
+add_executable(voronoi_generation main.c src/int_array.h src/int_array.c src/int_matrix.c src/int_matrix.h src/voronoi.c src/voronoi.h src/distance_metric.c src/distance_metric.h src/parse.h src/parse.c src/points.c src/points.h)
 target_link_libraries(voronoi_generation m)

@@ -21,7 +21,7 @@ typedef struct {
 
 Cells* create_voronoi_diagram(IntMatrix* centers, IntMatrix* points, DistanceMetric metric);
 void voronoi_relaxation(IntMatrix* points, IntMatrix* centers, DistanceMetric metric, int iterations,
-                        double convergence, FILE* stream);
+                        double converge_threshold, FILE* stream);
 void free_cells(Cells* cells);
 
 #endif //VORONOI_GENERATION__VORONOI_H_

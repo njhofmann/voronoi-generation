@@ -4,6 +4,7 @@
 
 #include <stdlib.h>
 #include <math.h>
+#include <stdbool.h>
 #include "voronoi.h"
 
 static const int STARTING_CELL_SIZE = 10;
@@ -80,32 +81,45 @@ void print_cell(Cell* cell, FILE* output_file) {
    */
   write_int_arr(cell->center, output_file);
   fprintf(output_file, " | ");
-  for (int i = 0; i < cell->points->height; i++) {
-    write_int_arr(cell->points->matrix[i], output_file);  // TODO write int matrix
-    fputc(' ', output_file);
-  }
+  write_int_matrix(cell->points, output_file);
   fputc('\n', output_file);
 }
 
 void print_cells(Cells* cells, FILE* output_file) {
   for (int i = 0; i < cells->size; i++)
     print_cell(cells->cells[i], output_file);
+  fputc('\n', output_file);
+}
 
-  for (int i = 0; i < 2; i++)
-    fputc('\n', output_file);
+double center_dist(IntArray* a, IntArray* b) {
+  double sum = 0.0;
+  for (int i = 0; i < a->size; i++)
+    sum += pow(a->items[i] - b->items[i], 2);
+  return pow(sum, .5);
+}
+
+bool convergence_threshold_met(double converge_threshold, IntMatrix* old_centers, IntMatrix* new_centers) {
+  for (int i = 0; i < old_centers->height; i++)
+    if (converge_threshold > center_dist(old_centers->matrix[i], new_centers->matrix[i]))
+      return true;
+  return false;
 }
 
 void voronoi_relaxation(IntMatrix* points, IntMatrix* centers, DistanceMetric metric, int iterations,
-                        double convergence, FILE* stream) {
-  double delta_dist = 0.0;
+                        double converge_threshold, FILE* stream) {
+  bool converged = false;  //
   IntMatrix* new_centers;
-  while ((convergence > 0.0 && delta_dist > convergence) || iterations > 0) {
+  while ((converge_threshold > 0.0 && !converged) || iterations > 0) {
     Cells* voronoi_diagram = create_voronoi_diagram(centers, points, metric);
     new_centers = compute_centers(voronoi_diagram);
     print_cells(voronoi_diagram, stream);
 
+    if (converge_threshold > 0.0)
+      converged = convergence_threshold_met(converge_threshold, centers, new_centers);
+
     free_cells(voronoi_diagram);
     free_int_matrix(centers);
+
     centers = new_centers;
 
     if (iterations >= 0)

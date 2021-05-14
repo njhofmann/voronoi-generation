@@ -22,5 +22,6 @@ void free_int_matrix(IntMatrix* matrix);
 void free_int_matrix_no_data(IntMatrix* matrix);
 IntMatrix* concat_int_matrices(IntMatrix** matrices, int size);
 void print_int_matrix(IntMatrix* matrix);
+void write_int_matrix(IntMatrix* matrix, FILE* output_file);
 
 #endif //VORONOI_GENERATION__INT_MATRIX_H_

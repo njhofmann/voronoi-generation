@@ -35,7 +35,6 @@ void free_int_matrix_no_data(IntMatrix* matrix) {
 }
 
 void free_int_matrix(IntMatrix* matrix) {
-  print_int_matrix(matrix);
   for (int i = 0; i < matrix->height; i++)
     free_int_array(matrix->matrix[i]);
   free_int_matrix_no_data(matrix);
@@ -56,7 +55,21 @@ IntMatrix* init_int_matrix_from_int_arrs(IntArray** arrs, int count) {
   return matrix;
 }
 
+IntMatrix* expand_int_matrix(IntMatrix* matrix) {
+  int new_total_height = ceil(matrix->total_height * RESIZE_FACTOR);
+  IntArray** new_matrix = malloc(sizeof(IntArray*) * new_total_height);
+  memcpy(new_matrix, matrix->matrix, sizeof(IntArray*) * matrix->height);
+  free(matrix->matrix);
+  matrix->matrix = new_matrix;
+  matrix->total_height = new_total_height;
+  return matrix;
+}
+
 void add_int_matrix(IntMatrix* matrix, IntArray* arr) {
+  /**
+   * Assigns the given IntArray to the first available slot in the given IntMatrix, if insufficient room - first
+   * expands IntMatrix
+   */
   if (matrix->width != UNSET_MATRIX_WIDTH && matrix->width != arr->size) {
     fprintf(stderr, "inserted array's size %d must equal matrix width %d", arr->size, matrix->width);
     exit(EXIT_FAILURE);
@@ -65,16 +78,10 @@ void add_int_matrix(IntMatrix* matrix, IntArray* arr) {
   if (matrix->width == UNSET_MATRIX_WIDTH)
     matrix->width = arr->size;
 
-  if (matrix->height == matrix->total_height) {
-    int new_total_height = ceil(matrix->total_height * RESIZE_FACTOR);
-    IntArray** new_matrix = malloc(sizeof(IntArray*) * new_total_height);
-    memcpy(new_matrix, matrix->matrix, sizeof(IntArray*) * matrix->height);
-    free(matrix->matrix);
-    matrix->matrix = new_matrix;
-    matrix->total_height = new_total_height;
-  }
+  if (matrix->height == matrix->total_height)
+    matrix = expand_int_matrix(matrix);
 
-  // TODO copy over or just take pointer?
+  // assign pointer, doesn't copy
   matrix->matrix[matrix->height] = arr;
   matrix->height++;
 }
@@ -135,4 +142,11 @@ IntMatrix* concat_int_matrices(IntMatrix** matrices, int size) {
   }
 
   return final;
+}
+
+void write_int_matrix(IntMatrix* matrix, FILE* output_file) {
+  for (int i = 0; i < matrix->height; i++) {
+    write_int_arr(matrix->matrix[i], output_file);
+    fputc(' ', output_file);
+  }
 }
