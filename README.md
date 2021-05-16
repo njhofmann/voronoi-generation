@@ -3,7 +3,6 @@ Point-by-point, *n*-dimensional Voronoi diagram generation and relaxation in C.
 
 ![header](blob:https://giphy.com/69541d5e-ee00-478a-960a-95584aa276e7)
 
-
 ## Background 
 
 This is small C program for [Voronoi diagram](https://en.wikipedia.org/wiki/Voronoi_diagram) and [relaxation](https://en.wikipedia.org/wiki/Lloyd%27s_algorithm) under a variety of distance functions.
