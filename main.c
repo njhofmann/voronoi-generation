@@ -58,9 +58,9 @@ int main(int argc, char* argv[]) {
   DistanceMetric distance_metric = EUCLIDEAN;
   int iterations = -1;
   bool full_output = false;
-  double convergence = 1;
+  double convergence = -1;
   FILE* output_file = stdout;
-  char* output_file_path; // TODO redo this
+  char* output_file_path;
   bool override_results = false;
   IntMatrix* starting_centers;
   IntMatrix* bounding_box;

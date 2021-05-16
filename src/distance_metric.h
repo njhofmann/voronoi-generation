@@ -6,6 +6,9 @@
 #ifndef VORONOI_GENERATION__DISTANCE_METRIC_H_
 #define VORONOI_GENERATION__DISTANCE_METRIC_H_
 
+/**
+ * Available distance metrics
+ */
 typedef enum {
   EUCLIDEAN = 1,
   MANHATTAN = 2,

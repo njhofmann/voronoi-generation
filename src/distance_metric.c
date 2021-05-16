@@ -28,9 +28,8 @@ double chebyshev_dist(IntArray* a, IntArray* b) {
   int max = 0;
   for (int i = 0; i < a->size; i++) {
     int temp = abs(a->items[i] - b->items[i]);
-    if (i == 0 || temp > max) {
+    if (i == 0 || temp > max)
       max = temp;
-    }
   }
   return max;
 }
@@ -111,6 +110,9 @@ double cosine_dist(IntArray* a, IntArray* b) {
   return sum / (squared_sum(a) * squared_sum(b));
 }
 
+/**
+ * Array of all distance metric methods
+ */
 double (*dist_func[10])(IntArray*, IntArray*) = {
     euclidean_dist,
     manhattan_dist,
@@ -124,12 +126,10 @@ double (*dist_func[10])(IntArray*, IntArray*) = {
     sum_of_squared_diff
 };
 
-void invalid_distance_metric() {
-  fprintf(stderr, "invalid distance metric\n");
-  exit(EXIT_FAILURE);
-}
-
 DistanceMetric parse_distance_metric(char* raw_arg) {
+  /**
+   * Returns the distance metric corresponding to the given string, throws an error if invalid string
+   */
   if (streq(raw_arg, "euclidean"))
     return EUCLIDEAN;
   else if (streq(raw_arg, "manhattan"))
@@ -151,10 +151,15 @@ DistanceMetric parse_distance_metric(char* raw_arg) {
   else if (streq(raw_arg, "ssd"))
     return SSD;
 
-  invalid_distance_metric();
+  fprintf(stderr, "%s is an invalid distance metric\n", raw_arg);
+  exit(EXIT_FAILURE);
 }
 
 double compute_distance_metric(IntArray* a, IntArray* b, DistanceMetric metric) {
+  /**
+   * Computes the distance between two given IntArrays using the given distance metric, assumes arrays are of the same
+   * length
+   */
   if (metric > 10) {
     fprintf(stderr, "unsupported distance metric\n");
     exit(EXIT_FAILURE);

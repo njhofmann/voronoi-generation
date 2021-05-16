@@ -27,6 +27,9 @@ int closest_center(IntArray* point, IntMatrix* centers, DistanceMetric distance_
 }
 
 Cell* init_cell(IntArray* center) {
+  /**
+   * Create a new Cell from the given IntArray
+   */
   Cell* cell = malloc(sizeof(Cell));
   cell->center = center;
   cell->points = init_empty_int_matrix(STARTING_CELL_SIZE);
@@ -34,6 +37,9 @@ Cell* init_cell(IntArray* center) {
 }
 
 Cells* init_cells(IntMatrix* centers) {
+  /**
+   * Inits an array of Cells from the given list of IntMatrices
+   */
   Cells* cells = malloc(sizeof(Cells));
   cells->cells = malloc(centers->height * sizeof(Cell*));
   cells->size = centers->height;
@@ -132,7 +138,7 @@ void free_cells(Cells* cells) {
 
 void voronoi_relaxation(IntMatrix* points, IntMatrix* centers, DistanceMetric metric, int iterations,
                         double converge_threshold, FILE* stream, bool full_output) {
-  bool converged = false;  //
+  bool converged = false;
   IntMatrix* new_centers;
   bool finished = false;
   while (!finished) {
@@ -140,7 +146,9 @@ void voronoi_relaxation(IntMatrix* points, IntMatrix* centers, DistanceMetric me
     Cells* voronoi_diagram = create_voronoi_diagram(centers, points, metric);
     new_centers = compute_centers(voronoi_diagram);
 
-    converged = convergence_threshold_met(converge_threshold, centers, new_centers);
+    if (converge_threshold > 0)
+      converged = convergence_threshold_met(converge_threshold, centers, new_centers);
+
     if (iterations > 0)
       iterations--;
 

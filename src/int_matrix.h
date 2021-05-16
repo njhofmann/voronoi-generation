@@ -6,11 +6,15 @@
 #define VORONOI_GENERATION__INT_MATRIX_H_
 
 #include "int_array.h"
+
+/**
+ * Array of IntArrays, resizeable height wise but fixed width wise (all IntArrays must have same width)
+ */
 typedef struct {
-  IntArray** matrix;
-  int total_height; // num of spaces ofint arrays and unused spaced for int arrays
-  int width; // size of each int array
-  int height; // number of inserted int arrays
+  IntArray** matrix; // IntArrays of matrix
+  int total_height;  // allocated + unallocated slots for IntArrays
+  int width;         // size of each IntArray
+  int height;        // number of inserted IntArrays
 } IntMatrix;
 
 IntMatrix* init_int_matrix(int width, int height);

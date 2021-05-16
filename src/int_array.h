@@ -5,10 +5,13 @@
 #ifndef VORONOI_GENERATION__INT_ARRAY_H_
 #define VORONOI_GENERATION__INT_ARRAY_H_
 
+/**
+ * A resizeable array of ints
+ */
 typedef struct {
-  int* items;
-  int total_size; // used + unused space
-  int size;  // used space
+  int* items;     // contents of array
+  int total_size; // allocated + unallocated space
+  int size;       // allocated space
 } IntArray;
 
 IntArray* init_int_array(int size);

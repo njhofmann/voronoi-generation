@@ -7,6 +7,10 @@
 
 #include "int_matrix.h"
 
+/**
+ * Parsing methods for processing input
+ */
+
 int parse_iterations(char* raw_arg);
 int find_next_arg_idx(int start_idx, int argc, char* argv[]);
 IntMatrix* parse_starting_centers(int start_idx, int argc, char* argv[]);

@@ -5,6 +5,7 @@ from typing import Optional
 import PIL.Image as pi
 import random as r
 import pathlib as pl
+import itertools as it
 import sys
 
 IMG_DIRC = pl.Path('imgs')
@@ -86,28 +87,30 @@ def create_cluster_lineages(clusters_file: str) -> list[ClusterLineage]:
     return clusters_to_lineages(lineages)
 
 
-def display_gen(gen: list[tuple[Cluster, str]], save_path: pl.Path, size: Optional[tuple[int, int]] = None) \
-        -> tuple[int, int]:
+def display_gen(gen: list[tuple[Cluster, tuple[int, int, int]]], size: Optional[tuple[int, int]] = None) \
+        -> tuple[pi.Image, tuple[int, int]]:
     if size is None:
-        size = tuple(map(lambda x: max(x) + 1, zip(*gen[0][0].cells)))
+        size = tuple(map(lambda x: max(x) + 1, zip(*it.chain(*[gen[i][0].cells for i in range(len(gen))]))))
     img = pi.new('RGB', size)
     for cluster, color in gen:
+        img.putpixel(tuple(cluster.center), (255, 0, 0))
         for cell in cluster.cells:
             img.putpixel(tuple(cell), color)
-    img.save(save_path)
-    return size
+    return img, size
 
 
-def display_lineages(lineages: list[ClusterLineage], save_dirc: str) -> None:
-    save_dirc = IMG_DIRC / save_dirc
-    save_dirc.mkdir(parents=True, exist_ok=True)
+def display_lineages(lineages: list[ClusterLineage], save_name: str) -> None:
+    save_path = IMG_DIRC / f'{save_name}.gif'
+    IMG_DIRC.mkdir(parents=True, exist_ok=True)
     size = None
+    imgs = []
     for i in range(len(lineages[0].clusters)):
         cur_gen = [(lineages[j].clusters[i], lineages[j].color) for j in range(len(lineages))]
-        size = display_gen(cur_gen, save_dirc / f'{i}.png', size)
+        img, size = display_gen(cur_gen, size)
+        imgs.append(img)
+    imgs[0].save(save_path, save_all=True, loop=0, append_images=imgs[1:], )
 
 
 if __name__ == '__main__':
-    save_dirc_name = 'test'
     cluster_lineages = create_cluster_lineages(sys.argv[1])
-    display_lineages(cluster_lineages, save_dirc_name)
+    display_lineages(cluster_lineages, sys.argv[2])

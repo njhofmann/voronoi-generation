@@ -24,6 +24,9 @@
 
 1. to do
     1. help option
+    1. docs
+    1. read me
+    1. cmake flags   
     1. redo matrix width
         1. make rows point to null, only append
         1. tension between int arrays that are being resized and int matrix
