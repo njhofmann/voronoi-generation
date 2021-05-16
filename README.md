@@ -1,7 +1,8 @@
 # voronoi-generation
 Point-by-point, *n*-dimensional Voronoi diagram generation and relaxation in C.
 
-![header](https://imgur.com/7i79oql)
+![header](blob:https://giphy.com/69541d5e-ee00-478a-960a-95584aa276e7)
+
 
 ## Background 
 
