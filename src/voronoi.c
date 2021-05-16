@@ -60,6 +60,10 @@ Cells* create_voronoi_diagram(IntMatrix* centers, IntMatrix* points, DistanceMet
 }
 
 IntArray* compute_center(Cell* cell) {
+  /**
+   * Computes a new center point by averaging each across point in the given Cell, dimension-wise (i.e. average across
+   * 1-st index, 2-nd index, ..., i-th index, etc.)
+   */
   IntArray* center = init_int_array(cell->points->width);
   center->size = cell->points->width;
   for (int i = 0; i < cell->points->height; i++)
@@ -73,6 +77,9 @@ IntArray* compute_center(Cell* cell) {
 }
 
 IntMatrix* compute_centers(Cells* cells) {
+  /**
+   * Computes a center point for each given Cell
+   */
   IntMatrix* centers = init_empty_int_matrix(cells->size);
   for (int i = 0; i < cells->size; i++)
     add_int_matrix(centers, compute_center(cells->cells[i]));
@@ -80,10 +87,10 @@ IntMatrix* compute_centers(Cells* cells) {
 }
 
 void print_cell(Cell* cell, FILE* output_file) {
-  /*
+  /**
+   * Writes the given Cell to the given FILE stream in the following manner
+   *
    * center | a1,a2,a3 b1,b2,b3 ...
-   * center | a1,a2,a3 b1,b2,b3 ...
-   * ...
    */
   write_int_arr(cell->center, output_file);
   fprintf(output_file, " | ");
@@ -92,6 +99,9 @@ void print_cell(Cell* cell, FILE* output_file) {
 }
 
 void print_cells(Cells* cells, FILE* output_file) {
+  /**
+   * Prints the given Cells to the given FILE stream
+   */
   for (int i = 0; i < cells->size; i++)
     print_cell(cells->cells[i], output_file);
   fputc('\n', output_file);
@@ -105,16 +115,16 @@ double center_dist(IntArray* a, IntArray* b) {
 }
 
 bool convergence_threshold_met(double converge_threshold, IntMatrix* old_centers, IntMatrix* new_centers) {
+  /**
+   * Returns if the given convergence threshold has been met - i.e. is there a pair of index matching centers (i-th
+   * center in each group) that has moved < `converge_threshold`
+   */
   if (converge_threshold < 0.0)
     return false;
   for (int i = 0; i < old_centers->height; i++)
     if (converge_threshold > center_dist(old_centers->matrix[i], new_centers->matrix[i]))
       return true;
   return false;
-}
-
-bool relaxation_finished(int iterations, bool converged) {
-  return iterations == 0 || converged;
 }
 
 void free_cell(Cell* cell) {
@@ -138,6 +148,19 @@ void free_cells(Cells* cells) {
 
 void voronoi_relaxation(IntMatrix* points, IntMatrix* centers, DistanceMetric metric, int iterations,
                         double converge_threshold, FILE* stream, bool full_output) {
+  /**
+   * Executes iterations of Voronoi relaxation from the given set of starting points and centers, using the given
+   * DistanceMetric
+   *
+   * Results are writen to the given FILE stream, if `full_output` is true each iteration is writen
+   *
+   * If `iterations` is positive, computes that many iterations of relaxation
+   *
+   * If `converge_threshold` is positive, executes iterations until the center of some cluster moves <
+   * `converge_theshold` between iterations
+   *
+   * If `iterations` and `converge_threshold` used, stops on the first one to be met
+   */
   bool converged = false;
   IntMatrix* new_centers;
   bool finished = false;
@@ -152,7 +175,7 @@ void voronoi_relaxation(IntMatrix* points, IntMatrix* centers, DistanceMetric me
     if (iterations > 0)
       iterations--;
 
-    finished = relaxation_finished(iterations, converged);
+    finished = iterations == 0 || converged;
 
     if (full_output || finished)
       print_cells(voronoi_diagram, stream);

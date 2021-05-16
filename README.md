@@ -17,7 +17,7 @@ This project uses CMake to build the program, producing the executable `voronoi_
 
 The executable accepts the following arguments in any order:
 
-- `--distance [-d] {optional, default: euclidian}`: distance metric to use; one of the following ...
+- `--distance [-d] {optional, default: euclidian}`: distance metric to use; see available options under `Distance Functions`
 
 - `--centers [-c] {required}`: starting center points, either listed in the command line spaced our or in a file line by line (ex: `examples/centers.txt`), each point in form of `x_1,x_2,...,x_i`
 
@@ -48,3 +48,30 @@ cj_1,cj_2,...,cj_i | aj_1,aj_2,...,aj_i bj_1,bj_2,...,bj_i ...
 
 A small Python script under `display_results.py` is included to display the results that are in 2D. It takes in a results file and directory to save the resulting images. Requires Python 3.9 and Pillow.
 
+### Distance Function
+
+Program supports the following distance functions, enter them into `--distance` as presented unless there are brackets next to it. Then enter the word in the brackets instead.
+
+- [euclidean](https://en.wikipedia.org/wiki/Euclidean_distance) 
+- [manhattan](https://en.wikipedia.org/wiki/Taxicab_geometry)
+- sum of squared distance `[ssd]` - mean squared error without 
+- ramanujan
+- [chebyshev](https://en.wikipedia.org/wiki/Chebyshev_distance)
+- [canberra](https://en.wikipedia.org/wiki/Canberra_distance) - weighted version of Manhattan distance
+- [pearson](https://en.wikipedia.org/wiki/Pearson_correlation_coefficient#Pearson's_distance) - Pearson's distance
+- [cosine](https://en.wikipedia.org/wiki/Cosine_similarity) - not a proper distance metric because it doesn't obey the triangle inequality
+- [bray-curtis](https://docs.scipy.org/doc/scipy/reference/generated/scipy.spatial.distance.braycurtis.html#scipy.spatial.distance.braycurtis) - not a proper distance metric because it doesn't obey the triangle inequality 
+- [minkowski-3](https://en.wikipedia.org/wiki/Minkowski_distance) - Minkowski distance when *p$=3
+- [minkowski-4](https://en.wikipedia.org/wiki/Minkowski_distance) - Minkowski distance when *p$=4
+- [yang-2](https://www.ccs.neu.edu/home/radivojac/papers/yang_dataminknowldisc_2019.pdf) - 
+- [yang-3](https://www.ccs.neu.edu/home/radivojac/papers/yang_dataminknowldisc_2019.pdf) -
+- [yang-4](https://www.ccs.neu.edu/home/radivojac/papers/yang_dataminknowldisc_2019.pdf) -
+      MANHATTAN = 2,
+SSD = 3,  // sum of squared difference
+RAMANUJAN = 4,
+CHEBYSHEV = 5,
+CANBERRA = 6,  // weighted manhattan
+PEARSON = 7,  // 1 - correlation
+COSINE = 8,
+MSE = 9,  // mean squared error
+MAE = 10

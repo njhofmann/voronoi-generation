@@ -18,8 +18,12 @@ typedef enum {
   CANBERRA = 6,  // weighted manhattan
   PEARSON = 7,  // 1 - correlation
   COSINE = 8,
-  MSE = 9,  // mean squared error
-  MAE = 10,  // mean absolute error
+  BRAY_CURTIS = 9,
+  MINKOWSKI_3 = 10,
+  MINKOWSKI_4 = 11,
+  YANG_2 = 12,
+  YANG_3 = 13,
+  YANG_4 = 14
 } DistanceMetric;
 
 DistanceMetric parse_distance_metric(char* raw_arg);
