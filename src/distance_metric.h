@@ -12,18 +12,17 @@
 typedef enum {
   EUCLIDEAN = 1,
   MANHATTAN = 2,
-  SSD = 3,  // sum of squared difference
-  RAMANUJAN = 4,
-  CHEBYSHEV = 5,
-  CANBERRA = 6,  // weighted manhattan
-  PEARSON = 7,  // 1 - correlation
-  COSINE = 8,
-  BRAY_CURTIS = 9,
-  MINKOWSKI_3 = 10,
-  MINKOWSKI_4 = 11,
-  YANG_2 = 12,
-  YANG_3 = 13,
-  YANG_4 = 14
+  RAMANUJAN = 3,
+  CHEBYSHEV = 4,
+  CANBERRA = 5,  // weighted manhattan
+  PEARSON = 6,  // 1 - correlation
+  COSINE = 7,
+  BRAY_CURTIS = 8,
+  MINKOWSKI_3 = 9,
+  MINKOWSKI_4 = 10,
+  YANG_2 = 11,
+  YANG_3 = 12,
+  YANG_4 = 13
 } DistanceMetric;
 
 DistanceMetric parse_distance_metric(char* raw_arg);

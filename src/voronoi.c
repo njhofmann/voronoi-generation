@@ -17,6 +17,9 @@ int closest_center(IntArray* point, IntMatrix* centers, DistanceMetric distance_
   int closest_idx = -1;
   double closest_dist = 0.0;
   for (int i = 0; i < centers->height; i++) {
+    if (same_int_arr(point, centers->matrix[i]))
+      return i;
+
     double cur_dist = compute_distance_metric(point, centers->matrix[i], distance_metric);
     if (closest_idx < 0 || closest_dist > cur_dist) {
       closest_idx = i;

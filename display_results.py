@@ -46,12 +46,15 @@ def cluster_dist(a: Cluster, b: Cluster) -> float:
     return sum([(a.center[i] - b.center[i]) ** 2 for i in range(len(a.center))]) ** 1 / 2
 
 
-def find_closest_cluster(cluster: Cluster, clusters: list[Cluster]) -> tuple[Cluster, list[Cluster]]:
+def find_closest_cluster(cluster: Cluster, clusters: list[Cluster]) -> Optional[tuple[Cluster, list[Cluster]]]:
     min_dist, min_idx = m.inf, None
     for i, other_cluster in enumerate(clusters):
         if (dist := cluster_dist(cluster, other_cluster)) < min_dist:
             min_dist = dist
             min_idx = i
+
+    if min_idx is None:
+        return None
     closest = clusters.pop(min_idx)
     return closest, clusters
 

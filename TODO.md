@@ -28,7 +28,9 @@
     1. read me
     1. cmake flags   
     1. mahalanobis dist?   
-    1. same colors for clusters   
+    1. canberra bug fix?
+    1. each generation --> different file   
+    1. same colors for clusters
     1. redo matrix width
         1. make rows point to null, only append
         1. tension between int arrays that are being resized and int matrix

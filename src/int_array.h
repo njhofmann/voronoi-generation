@@ -5,6 +5,7 @@
 #ifndef VORONOI_GENERATION__INT_ARRAY_H_
 #define VORONOI_GENERATION__INT_ARRAY_H_
 
+#include <stdbool.h>
 /**
  * A resizeable array of ints
  */
@@ -20,5 +21,5 @@ void add_to_int_arr(IntArray* arr, int item);
 void copy_int_arr(IntArray* src, IntArray* dest);
 void print_int_arr(IntArray* arr);
 void write_int_arr(IntArray* arr, FILE* file);
-
+bool same_int_arr(IntArray* a, IntArray* b);
 #endif //VORONOI_GENERATION__INT_ARRAY_H_

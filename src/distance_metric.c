@@ -48,9 +48,6 @@ double sum_of_squared_diff(IntArray* a, IntArray* b) {
   return sum;
 }
 
-double mean_squared_error(IntArray* a, IntArray* b) {
-  return sum_of_squared_diff(a, b) / a->size;
-}
 
 double euclidean_dist(IntArray* a, IntArray* b) {
   return minkowski_p_dist(a, b, 2);
@@ -59,7 +56,7 @@ double euclidean_dist(IntArray* a, IntArray* b) {
 double canberra_dist(IntArray* a, IntArray* b) {
   double sum = 0;
   for (int i = 0; i < a->size; i++)
-    sum += abs(a->items[i] - b->items[i]) / (1.0 * (abs(a->items[i] + abs(b->items[i]))));
+    sum += abs(a->items[i] - b->items[i]) / (1.0 * (abs(a->items[i]) + abs(b->items[i])));
   return sum;
 }
 
@@ -168,7 +165,7 @@ double yang_4_dist(IntArray* a, IntArray* b) {
 /**
  * Array of all distance metric methods
  */
-double (*dist_func[14])(IntArray*, IntArray*) = {
+double (*dist_func[13])(IntArray*, IntArray*) = {
     euclidean_dist,
     manhattan_dist,
     ramanujan_dist,
@@ -176,7 +173,6 @@ double (*dist_func[14])(IntArray*, IntArray*) = {
     canberra_dist,
     pearsons_dist,
     cosine_dist,
-    sum_of_squared_diff,
     bray_curtis_dist,
     minkowski_3_dist,
     minkowski_4_dist,
@@ -203,8 +199,6 @@ DistanceMetric parse_distance_metric(char* raw_arg) {
     return PEARSON;
   else if (streq(raw_arg, "cosine"))
     return COSINE;
-  else if (streq(raw_arg, "ssd"))
-    return SSD;
   else if (streq(raw_arg, "bray-curtis"))
     return BRAY_CURTIS;
   else if (streq(raw_arg, "minkowski-3"))
