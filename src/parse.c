@@ -10,10 +10,10 @@
 
 static const int STARTING_POINT_ARR_SIZE = 3;
 
-int parse_iterations(char* raw_arg) {
+int parse_pos_num(char* raw_arg) {
   int val = strtol(raw_arg, NULL, 10);
-  if (val < -1) {
-    fprintf(stderr, "number of iterations must be >= -1");
+  if (val <= 0) {
+    fprintf(stderr, "positive number must be > 0");
     exit(EXIT_FAILURE);
   }
   return val;

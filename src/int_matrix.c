@@ -21,7 +21,7 @@ IntMatrix* init_int_matrix(int width, int height) {
   }
 
   IntMatrix* matrix = malloc(sizeof(IntMatrix));
-  matrix->width = 0; // TODO arrays are initally empty
+  matrix->width = 0; // arrays are initially empty
   matrix->height = height;
   matrix->total_height = height;
   matrix->matrix = malloc(sizeof(IntArray*) * height);
@@ -44,9 +44,11 @@ void free_int_matrix(IntMatrix* matrix) {
   /**
    * Frees the memory of the given IntMatrix and its contents
    */
-  for (int i = 0; i < matrix->height; i++)
-    free_int_array(matrix->matrix[i]);
-  free_int_matrix_no_data(matrix);
+   if (matrix != NULL) {
+     for (int i = 0; i < matrix->height; i++)
+       free_int_array(matrix->matrix[i]);
+     free_int_matrix_no_data(matrix);
+   }
 }
 
 IntMatrix* init_int_matrix_from_int_arrs(IntArray** arrs, int count) {

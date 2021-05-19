@@ -18,14 +18,11 @@ typedef enum {
   PEARSON = 6,  // 1 - correlation
   COSINE = 7,
   BRAY_CURTIS = 8,
-  MINKOWSKI_3 = 9,
-  MINKOWSKI_4 = 10,
-  YANG_2 = 11,
-  YANG_3 = 12,
-  YANG_4 = 13
+  MINKOWSKI = 9,
+  YANG = 10,
 } DistanceMetric;
 
 DistanceMetric parse_distance_metric(char* raw_arg);
-double compute_distance_metric(IntArray* a, IntArray* b, DistanceMetric metric);
+double compute_distance_metric(IntArray* a, IntArray* b, DistanceMetric metric, int p);
 
 #endif //VORONOI_GENERATION__DISTANCE_METRIC_H_

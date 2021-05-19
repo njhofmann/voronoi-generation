@@ -25,6 +25,6 @@ typedef struct {
   int size;     // number of cells
 } Cells;
 
-void voronoi_relaxation(IntMatrix* points, IntMatrix* centers, DistanceMetric metric, int iterations,
-                        double converge_threshold, FILE* stream, bool full_output);
+void voronoi_relaxation(IntArray* dimensions, IntMatrix* points, IntMatrix* centers, DistanceMetric metric,
+                        int iterations, double converge_threshold, char* output_dirc, bool full_output, int p);
 #endif //VORONOI_GENERATION__VORONOI_H_

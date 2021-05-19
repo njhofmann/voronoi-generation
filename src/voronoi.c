@@ -5,11 +5,13 @@
 #include <stdlib.h>
 #include <math.h>
 #include <stdbool.h>
+#include <string.h>
 #include "voronoi.h"
+#include "int_tensor.h"
 
 static const int STARTING_CELL_SIZE = 10;
 
-int closest_center(IntArray* point, IntMatrix* centers, DistanceMetric distance_metric) {
+int closest_center(IntArray* point, IntMatrix* centers, DistanceMetric distance_metric, int p) {
   /**
    * Finds the index of the center that is closest to the given point via the given distance metric. Assumes the point
    * and centers are of the same dimensionality
@@ -20,7 +22,7 @@ int closest_center(IntArray* point, IntMatrix* centers, DistanceMetric distance_
     if (same_int_arr(point, centers->matrix[i]))
       return i;
 
-    double cur_dist = compute_distance_metric(point, centers->matrix[i], distance_metric);
+    double cur_dist = compute_distance_metric(point, centers->matrix[i], distance_metric, p);
     if (closest_idx < 0 || closest_dist > cur_dist) {
       closest_idx = i;
       closest_dist = cur_dist;
@@ -51,12 +53,12 @@ Cells* init_cells(IntMatrix* centers) {
   return cells;
 }
 
-Cells* create_voronoi_diagram(IntMatrix* centers, IntMatrix* points, DistanceMetric metric) {
+Cells* create_voronoi_diagram(IntMatrix* centers, IntMatrix* points, DistanceMetric metric, int p) {
   Cells* cells = init_cells(centers);
   // TODO multithreading?
   for (int i = 0; i < points->height; i++) {
     IntArray* cur_point = points->matrix[i];
-    int closest_center_idx = closest_center(cur_point, centers, metric);
+    int closest_center_idx = closest_center(cur_point, centers, metric, p);
     add_int_matrix(cells->cells[closest_center_idx]->points, cur_point);
   }
   return cells;
@@ -149,8 +151,57 @@ void free_cells(Cells* cells) {
   free(cells);
 }
 
-void voronoi_relaxation(IntMatrix* points, IntMatrix* centers, DistanceMetric metric, int iterations,
-                        double converge_threshold, FILE* stream, bool full_output) {
+int get_point_idx(IntArray* point, IntArray* dims) {
+  // TODO generalize this to n-d
+  return (dims->items[0] * point->items[0]) + point->items[1];
+}
+
+IntMatrix* record_point_assigns(IntArray* dims, IntMatrix* point_groups, Cells* cells) {
+  for (int i = 0; i < cells->size; i++) {
+    Cell* cur_cell = cells->cells[i];
+    for (int j = 0; j < cur_cell->points->height; j++) {
+      IntArray* cur_point = cur_cell->points->matrix[j];
+      int cur_point_idx = get_point_idx(cur_point, dims);
+      add_to_int_arr(point_groups->matrix[cur_point_idx], i);
+    }
+  }
+  point_groups->width++;
+  return point_groups;
+}
+
+char* add_str(char* src, const char* add) {
+  char* dest = calloc(strlen(src) + strlen(add) + 2, sizeof(char ));
+  dest = strcpy(dest, src);
+  dest = strcat(dest, "/");
+  return strcat(dest, add);
+}
+
+void write_point_centers(IntMatrix* points, IntMatrix* point_centers, char* output_dirc) {
+  char* file = add_str(output_dirc, "point_centers.txt");
+  FILE* stream = fopen(file, "w");
+  for (int i = 0; i < points->height; i++) {
+    write_int_arr(points->matrix[i], stream);
+    fputc(' ', stream);
+    for (int j = 0; j < point_centers->width; j++) {
+      fprintf(stream, "%d", point_centers->matrix[i]->items[j]);
+      fputc(' ', stream);
+    }
+    fputc('\n', stream);
+  }
+  fclose(stream);
+  free(file);
+}
+
+void write_all_centers(IntTensor* all_centers, char* output_dirc) {
+  char* file = add_str(output_dirc, "centers.txt");
+  FILE* stream = fopen(file, "w");
+  write_int_tensor(all_centers, stream);
+  fclose(stream);
+  free(file);
+}
+
+void voronoi_relaxation(IntArray* dimensions, IntMatrix* points, IntMatrix* centers, DistanceMetric metric,
+                        int iterations, double converge_threshold, char* output_dirc, bool full_output, int p) {
   /**
    * Executes iterations of Voronoi relaxation from the given set of starting points and centers, using the given
    * DistanceMetric
@@ -164,12 +215,16 @@ void voronoi_relaxation(IntMatrix* points, IntMatrix* centers, DistanceMetric me
    *
    * If `iterations` and `converge_threshold` used, stops on the first one to be met
    */
+  // holds each points assigned cell during each iteration
+  IntMatrix* point_centers = init_int_matrix(10, points->height);
+
+  IntTensor* all_centers = init_int_tensor(centers, 10);
+
   bool converged = false;
   IntMatrix* new_centers;
   bool finished = false;
   while (!finished) {
-  //while ((converge_threshold > 0.0 && !converged) || iterations > 0) {
-    Cells* voronoi_diagram = create_voronoi_diagram(centers, points, metric);
+    Cells* voronoi_diagram = create_voronoi_diagram(centers, points, metric, p);
     new_centers = compute_centers(voronoi_diagram);
 
     if (converge_threshold > 0)
@@ -180,17 +235,25 @@ void voronoi_relaxation(IntMatrix* points, IntMatrix* centers, DistanceMetric me
 
     finished = iterations == 0 || converged;
 
-    if (full_output || finished)
-      print_cells(voronoi_diagram, stream);
+    if (full_output || finished) {
+      record_point_assigns(dimensions, point_centers, voronoi_diagram);
+      add_matrix_to_int_tensor(all_centers, centers);
+    }
+      // print_cells(voronoi_diagram, stream);
 
     free_cells(voronoi_diagram);
-    free_int_matrix(centers);
 
     centers = new_centers;
   }
 
+  write_point_centers(points, point_centers, output_dirc);
+  write_all_centers(all_centers, output_dirc);
+
   if (new_centers != NULL)
     free_int_matrix(new_centers);
+
+  free_int_tensor(all_centers);
+  free_int_matrix(point_centers);
 
   for (int i = 0; i < points->height; i++)
     free_int_array(points->matrix[i]);

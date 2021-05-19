@@ -8,5 +8,6 @@
 #include "int_matrix.h"
 
 IntMatrix* get_points_in_bounding_box(IntMatrix* box);
+IntArray* get_bounding_box_dims(IntMatrix* box);
 
 #endif //VORONOI_GENERATION_SRC_POINTS_H_

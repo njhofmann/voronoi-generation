@@ -8,6 +8,7 @@
 #include "src/voronoi.h"
 #include "src/parse.h"
 #include "src/points.h"
+#include "src/file_utils.h"
 
 static struct option LONG_OPTIONS[] = {
     // flag = NULL means val is used to id if arg is included
@@ -16,13 +17,14 @@ static struct option LONG_OPTIONS[] = {
     {"box", required_argument, NULL, 'b'},
     {"iterations", required_argument, NULL, 'i'},
     {"convergence", required_argument, NULL, 'v'},
-    {"output", required_argument, NULL, 'o'},
+    {"output_dirc", required_argument, NULL, 'o'},
+    {"p", required_argument, NULL, 'p'},
     {"full", no_argument, NULL, 'f'},
     {"override", no_argument, NULL, 'r'},
     {NULL, 0, NULL, 0}
 };
 
-static bool FOUND_OPTIONS[8] = {false, false, false, false, false, false, false, false};
+static bool FOUND_OPTIONS[9] = {false, false, false, false, false, false, false, false, false};
 
 void found_option(int idx, const char* name) {
   if (FOUND_OPTIONS[idx]) {
@@ -59,9 +61,9 @@ int main(int argc, char* argv[]) {
   int iterations = -1;
   bool full_output = false;
   double convergence = -1;
-  FILE* output_file = stdout;
-  char* output_file_path;
+  char* output_dirc;
   bool override_results = false;
+  int p = 2;
   IntMatrix* starting_centers;
   IntMatrix* bounding_box;
 
@@ -83,22 +85,26 @@ int main(int argc, char* argv[]) {
         break;
       case 'i':
         found_option(3, "iterations");
-        iterations = parse_iterations(argv[optind - 1]);
+        iterations = parse_pos_num(argv[optind - 1]);
         break;
       case 'v':
         found_option(4, "convergence");
         convergence = strtod(argv[optind-1], NULL);
         break;
       case 'o':
-        found_option(5, "output");
-        output_file_path = argv[optind-1];
+        found_option(5, "output directory");
+        output_dirc = argv[optind-1];
         break;
       case 'f':
         found_option(6, "full output");
         full_output = true;
         break;
+      case 'p':
+        found_option(7, "p");
+        p = parse_pos_num(argv[optind-1]);
+        break;
       case 'r':
-        found_option(7, "override");
+        found_option(8, "override");
         override_results = true;
         break;
       case '?':
@@ -120,8 +126,8 @@ int main(int argc, char* argv[]) {
     exit(EXIT_FAILURE);
   }
 
-  if (FOUND_OPTIONS[6])
-    output_file = check_file_path(output_file_path, override_results);
+  if (FOUND_OPTIONS[5])
+    create_dirc(output_dirc, override_results);
 
   if (convergence < 0 && iterations < 0) {
     fprintf(stderr, "need at least a positive convergence threshold or positive number of iterations");
@@ -134,9 +140,10 @@ int main(int argc, char* argv[]) {
   }
 
   IntMatrix* points = get_points_in_bounding_box(bounding_box);
-  free_int_matrix(bounding_box);
+  IntArray* dims = get_bounding_box_dims(bounding_box);
+  voronoi_relaxation(dims, points, starting_centers, distance_metric, iterations, convergence, output_dirc, full_output, p);
 
-  voronoi_relaxation(points, starting_centers, distance_metric, iterations, convergence, output_file, full_output);
-  fclose(output_file);
+  free_int_array(dims);
+  free_int_matrix(bounding_box);
   return EXIT_SUCCESS;
 }

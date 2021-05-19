@@ -13,25 +13,19 @@ bool streq(char* a, char* b) {
   return strcmp(a, b) == 0;
 }
 
-double minkowski_p_dist(IntArray* a, IntArray* b, int p) {
+double minkowski_dist(IntArray* a, IntArray* b, int p) {
   double sum = 0.0;
   for (int i = 0; i < a->size; i++)
-    sum += pow(a->items[i] - b->items[i], p);
+    sum += pow(abs(a->items[i] - b->items[i]), p);
   return pow(sum, 1.0 / (p * 1.0));
 }
 
-double manhattan_dist(IntArray* a, IntArray* b) {
-  int sum = 0;
-  for (int i = 0; i < a->size; i++)
-    sum += abs(a->items[i] - b->items[i]);
-  return sum;
+double manhattan_dist(IntArray* a, IntArray* b, int p) {
+  return minkowski_dist(a, b, 1);
 }
 
-double mean_absolute_error_dist(IntArray* a, IntArray* b) {
-  return manhattan_dist(a, b) / a->size;
-}
 
-double chebyshev_dist(IntArray* a, IntArray* b) {
+double chebyshev_dist(IntArray* a, IntArray* b, int p) {
   int max = 0;
   for (int i = 0; i < a->size; i++) {
     int temp = abs(a->items[i] - b->items[i]);
@@ -41,19 +35,11 @@ double chebyshev_dist(IntArray* a, IntArray* b) {
   return max;
 }
 
-double sum_of_squared_diff(IntArray* a, IntArray* b) {
-  double sum = 0;
-  for (int i = 0; i < a->size; i++)
-    sum += 1.0 * pow(a->items[i] - b->items[i], 2);
-  return sum;
+double euclidean_dist(IntArray* a, IntArray* b, int p) {
+  return minkowski_dist(a, b, 2);
 }
 
-
-double euclidean_dist(IntArray* a, IntArray* b) {
-  return minkowski_p_dist(a, b, 2);
-}
-
-double canberra_dist(IntArray* a, IntArray* b) {
+double canberra_dist(IntArray* a, IntArray* b, int p) {
   double sum = 0;
   for (int i = 0; i < a->size; i++)
     sum += abs(a->items[i] - b->items[i]) / (1.0 * (abs(a->items[i]) + abs(b->items[i])));
@@ -74,7 +60,7 @@ double pearsons_dist_help(IntArray* a, double avg) {
   return sqrt(sum - (a->size * pow(avg, 2)));
 }
 
-double pearsons_dist(IntArray* a, IntArray* b) {
+double pearsons_dist(IntArray* a, IntArray* b, int p) {
   // https://en.wikipedia.org/wiki/Pearson_correlation_coefficient#For_a_sample
   double a_avg = average(a);
   double b_avg = average(b);
@@ -95,7 +81,7 @@ double squared_sum(IntArray* a) {
   return sum;
 }
 
-double ramanujan_dist(IntArray* a, IntArray* b) {
+double ramanujan_dist(IntArray* a, IntArray* b, int p) {
   // https://kenta.blogspot.com/2004/08/ramanujan-and-ellipses.html
   double sum = 0;
   for (int i = 0; i < a->size; i++) {
@@ -107,14 +93,14 @@ double ramanujan_dist(IntArray* a, IntArray* b) {
   return sum;
 }
 
-double cosine_dist(IntArray* a, IntArray* b) {
+double cosine_dist(IntArray* a, IntArray* b, int p) {
   double sum = 0;
   for (int i = 0; i < a->size; i++)
     sum += 1.0 * a->items[i] * b->items[i];
   return sum / (squared_sum(a) * squared_sum(b));
 }
 
-double bray_curtis_dist(IntArray* a, IntArray* b) {
+double bray_curtis_dist(IntArray* a, IntArray* b, int p) {
   double numerator = 0;
   double denominator = 0;
   for (int i = 0; i < a->size; i++) {
@@ -127,15 +113,7 @@ double bray_curtis_dist(IntArray* a, IntArray* b) {
   return numerator / denominator;
 }
 
-double minkowski_3_dist(IntArray* a, IntArray* b) {
-  return minkowski_p_dist(a, b, 3);
-}
-
-double minkowski_4_dist(IntArray* a, IntArray* b) {
-  return minkowski_p_dist(a, b, 4);
-}
-
-double yang_p_dist(IntArray* a, IntArray* b, int p) {
+double yang_dist(IntArray* a, IntArray* b, int p) {
   double x_greater = 0.0;
   double x_lesser = 0.0;
   for (int i = 0; i < a->size; i++) {
@@ -150,22 +128,10 @@ double yang_p_dist(IntArray* a, IntArray* b, int p) {
   return pow(pow(x_greater, p) + pow(x_lesser, p) , 1.0 / (1.0 * p));
 }
 
-double yang_2_dist(IntArray* a, IntArray* b) {
-  return yang_p_dist(a, b, 2);
-}
-
-double yang_3_dist(IntArray* a, IntArray* b) {
-  return yang_p_dist(a, b, 3);
-}
-
-double yang_4_dist(IntArray* a, IntArray* b) {
-  return yang_p_dist(a, b, 4);
-}
-
 /**
  * Array of all distance metric methods
  */
-double (*dist_func[13])(IntArray*, IntArray*) = {
+double (*dist_func[13])(IntArray*, IntArray*, int) = {
     euclidean_dist,
     manhattan_dist,
     ramanujan_dist,
@@ -174,11 +140,8 @@ double (*dist_func[13])(IntArray*, IntArray*) = {
     pearsons_dist,
     cosine_dist,
     bray_curtis_dist,
-    minkowski_3_dist,
-    minkowski_4_dist,
-    yang_2_dist,
-    yang_3_dist,
-    yang_4_dist
+    minkowski_dist,
+    yang_dist
 };
 
 DistanceMetric parse_distance_metric(char* raw_arg) {
@@ -201,29 +164,23 @@ DistanceMetric parse_distance_metric(char* raw_arg) {
     return COSINE;
   else if (streq(raw_arg, "bray-curtis"))
     return BRAY_CURTIS;
-  else if (streq(raw_arg, "minkowski-3"))
-    return MINKOWSKI_3;
-  else if (streq(raw_arg, "minkowski-4"))
-    return MINKOWSKI_4;
-  else if (streq(raw_arg, "yang-2"))
-    return YANG_2;
-  else if (streq(raw_arg, "yang-3"))
-    return YANG_3;
-  else if (streq(raw_arg, "yang-4"))
-    return YANG_4;
+  else if (streq(raw_arg, "minkowski"))
+    return MINKOWSKI;
+  else if (streq(raw_arg, "yang"))
+    return YANG;
 
   fprintf(stderr, "%s is an invalid distance metric\n", raw_arg);
   exit(EXIT_FAILURE);
 }
 
-double compute_distance_metric(IntArray* a, IntArray* b, DistanceMetric metric) {
+double compute_distance_metric(IntArray* a, IntArray* b, DistanceMetric metric, int p) {
   /**
    * Computes the distance between two given IntArrays using the given distance metric, assumes arrays are of the same
    * length
    */
-  if (metric > 14) {
+  if (metric > 10 || metric < 1) {
     fprintf(stderr, "unsupported distance metric\n");
     exit(EXIT_FAILURE);
   }
-  return (*dist_func[metric])(a, b);
+  return (*dist_func[metric])(a, b, p);
 }

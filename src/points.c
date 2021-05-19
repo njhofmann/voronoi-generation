@@ -16,11 +16,19 @@ IntMatrix* add_bounds_to_int_array(IntArray* arr, int start, int end) {
   return expanded;
 }
 
+IntArray* get_bounding_box_dims(IntMatrix* box) {
+  IntArray* dims = init_int_array(box->width); // TODO is this set
+  for (int i = 0; i < box->width; i++)
+    // TODO is this correct?
+    dims->items[i] = box->matrix[1]->items[i] - box->matrix[0]->items[i] - 1;
+  return dims;
+}
+
 IntMatrix* get_points_in_bounding_box(IntMatrix* box) {
   /**
    * Returns an IntMatrix of all the points in the given bounding box
    *
-   * Ex: if bounding box if from (0,0) to (10, 10) - returns (0, 0), (0, 1), ..., (10, 9), (10, 10)
+   * Ex: if bounding box if from (0,0) to (10, 10) - returns (0, 0), (0, 1), ..., (9, 8), (9, 9)
    */
   if (box->height != 2) {
     fprintf(stderr, "bounding box must have exact two points\n");
