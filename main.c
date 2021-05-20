@@ -61,7 +61,7 @@ int main(int argc, char* argv[]) {
   int iterations = -1;
   bool full_output = false;
   double convergence = -1;
-  char* output_dirc;
+  char* output_dirc = NULL;
   bool override_results = false;
   int p = 2;
   IntMatrix* starting_centers;
@@ -69,7 +69,7 @@ int main(int argc, char* argv[]) {
 
   // short options - : means required, :: means optional
   char cur_arg;
-  while ((cur_arg = getopt_long(argc, argv, "d:c:b:i:v:o:fr", LONG_OPTIONS, NULL)) != -1) {
+  while ((cur_arg = getopt_long(argc, argv, "d:c:b:i:v:o:frp:", LONG_OPTIONS, NULL)) != -1) {
     switch (cur_arg) {
       case 'd':
         found_option(0, "distance");

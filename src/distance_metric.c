@@ -131,7 +131,7 @@ double yang_dist(IntArray* a, IntArray* b, int p) {
 /**
  * Array of all distance metric methods
  */
-double (*dist_func[13])(IntArray*, IntArray*, int) = {
+double (*dist_func[10])(IntArray*, IntArray*, int) = {
     euclidean_dist,
     manhattan_dist,
     ramanujan_dist,
@@ -178,7 +178,7 @@ double compute_distance_metric(IntArray* a, IntArray* b, DistanceMetric metric, 
    * Computes the distance between two given IntArrays using the given distance metric, assumes arrays are of the same
    * length
    */
-  if (metric > 10 || metric < 1) {
+  if (metric > 9 || metric < 0) {
     fprintf(stderr, "unsupported distance metric\n");
     exit(EXIT_FAILURE);
   }

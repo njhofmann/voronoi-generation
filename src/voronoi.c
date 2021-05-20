@@ -176,28 +176,37 @@ char* add_str(char* src, const char* add) {
   return strcat(dest, add);
 }
 
-void write_point_centers(IntMatrix* points, IntMatrix* point_centers, char* output_dirc) {
-  char* file = add_str(output_dirc, "point_centers.txt");
-  FILE* stream = fopen(file, "w");
+void write_point_centers(IntMatrix* points, IntMatrix* point_centers, IntArray* dims, char* output_dirc) {
+  FILE* stream = stdout;
+  if (output_dirc != NULL) {
+    char* file = add_str(output_dirc, "point_centers.txt");
+    stream = fopen(file, "w");
+    free(file);
+  }
+
   for (int i = 0; i < points->height; i++) {
-    write_int_arr(points->matrix[i], stream);
+    IntArray* cur_point = points->matrix[i];
+    write_int_arr(cur_point, stream);
     fputc(' ', stream);
+    IntArray* cur_centers = point_centers->matrix[get_point_idx(cur_point, dims)];
     for (int j = 0; j < point_centers->width; j++) {
-      fprintf(stream, "%d", point_centers->matrix[i]->items[j]);
+      fprintf(stream, "%d", cur_centers->items[j]);
       fputc(' ', stream);
     }
     fputc('\n', stream);
   }
   fclose(stream);
-  free(file);
 }
 
 void write_all_centers(IntTensor* all_centers, char* output_dirc) {
-  char* file = add_str(output_dirc, "centers.txt");
-  FILE* stream = fopen(file, "w");
+  FILE* stream = stdout;
+  if (output_dirc != NULL) {
+    char* file = add_str(output_dirc, "centers.txt");
+    stream = fopen(file, "w");
+    free(file);
+  }
   write_int_tensor(all_centers, stream);
   fclose(stream);
-  free(file);
 }
 
 void voronoi_relaxation(IntArray* dimensions, IntMatrix* points, IntMatrix* centers, DistanceMetric metric,
@@ -246,7 +255,7 @@ void voronoi_relaxation(IntArray* dimensions, IntMatrix* points, IntMatrix* cent
     centers = new_centers;
   }
 
-  write_point_centers(points, point_centers, output_dirc);
+  write_point_centers(points, point_centers, dimensions, output_dirc);
   write_all_centers(all_centers, output_dirc);
 
   if (new_centers != NULL)

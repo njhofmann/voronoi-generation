@@ -10,16 +10,16 @@
  * Available distance metrics
  */
 typedef enum {
-  EUCLIDEAN = 1,
-  MANHATTAN = 2,
-  RAMANUJAN = 3,
-  CHEBYSHEV = 4,
-  CANBERRA = 5,  // weighted manhattan
-  PEARSON = 6,  // 1 - correlation
-  COSINE = 7,
-  BRAY_CURTIS = 8,
-  MINKOWSKI = 9,
-  YANG = 10,
+  EUCLIDEAN = 0,
+  MANHATTAN = 1,
+  RAMANUJAN = 2,
+  CHEBYSHEV = 3,
+  CANBERRA = 4,  // weighted manhattan
+  PEARSON = 5,  // 1 - correlation
+  COSINE = 6,
+  BRAY_CURTIS = 7,
+  MINKOWSKI = 8,
+  YANG = 9,
 } DistanceMetric;
 
 DistanceMetric parse_distance_metric(char* raw_arg);

@@ -26,7 +26,7 @@
     1. help option
     1. docs
     1. read me
-    1. cmake flags   
+    1. valid centers check   
     1. mahalanobis dist?   
     1. canberra bug fix?
     1. each generation --> different file   

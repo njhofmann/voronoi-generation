@@ -20,7 +20,7 @@ IntArray* get_bounding_box_dims(IntMatrix* box) {
   IntArray* dims = init_int_array(box->width); // TODO is this set
   for (int i = 0; i < box->width; i++)
     // TODO is this correct?
-    dims->items[i] = box->matrix[1]->items[i] - box->matrix[0]->items[i] - 1;
+    dims->items[i] = box->matrix[1]->items[i] - box->matrix[0]->items[i];
   return dims;
 }
 
