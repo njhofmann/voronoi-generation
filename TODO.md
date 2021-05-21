@@ -26,18 +26,15 @@
     1. help option
     1. docs
     1. read me
-    1. valid centers check   
-    1. mahalanobis dist?   
-    1. canberra bug fix?
-    1. each generation --> different file   
-    1. same colors for clusters
+    1. random centers
+    1. when does it fail?
+    1. valid centers check
+    1. mahalanobis dist?
     1. redo matrix width
         1. make rows point to null, only append
         1. tension between int arrays that are being resized and int matrix
         1. how to create a new empty int matrix with a "width" if width relies on int arrays
     1. multithreading?
-    1. bug checks
-       1. missing new cell for some distance metrics 
     1. performance checks
     1. docs
 

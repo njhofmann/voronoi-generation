@@ -61,6 +61,15 @@ Cells* create_voronoi_diagram(IntMatrix* centers, IntMatrix* points, DistanceMet
     int closest_center_idx = closest_center(cur_point, centers, metric, p);
     add_int_matrix(cells->cells[closest_center_idx]->points, cur_point);
   }
+
+  // edge case when there are duplicate centers and only the first instance has points added
+  // add center itself so there is something
+  for (int i = 0; i < cells->size; i++) {
+    Cell* cur_cell = cells->cells[i];
+    if (cur_cell->points->height < 1)
+      add_int_matrix(cur_cell->points, cur_cell->center);
+  }
+
   return cells;
 }
 
@@ -76,7 +85,7 @@ IntArray* compute_center(Cell* cell) {
       center->items[j] += cell->points->matrix[i]->items[j];
 
   for (int j = 0; j < center->size; j++)
-    center->items[j] = round(center->items[j] / (1.0 * cell->points->height));
+    center->items[j] = (int)round(center->items[j] / (1.0 * cell->points->height));
 
   return center;
 }
@@ -113,10 +122,7 @@ void print_cells(Cells* cells, FILE* output_file) {
 }
 
 double center_dist(IntArray* a, IntArray* b) {
-  double sum = 0.0;
-  for (int i = 0; i < a->size; i++)
-    sum += pow(a->items[i] - b->items[i], 2);
-  return pow(sum, .5);
+  return compute_distance_metric(a, b, EUCLIDEAN, 2);
 }
 
 bool convergence_threshold_met(double converge_threshold, IntMatrix* old_centers, IntMatrix* new_centers) {
@@ -153,7 +159,7 @@ void free_cells(Cells* cells) {
 
 int get_point_idx(IntArray* point, IntArray* dims) {
   // TODO generalize this to n-d
-  return (dims->items[0] * point->items[0]) + point->items[1];
+  return (dims->items[1] * point->items[0]) + point->items[1];
 }
 
 IntMatrix* record_point_assigns(IntArray* dims, IntMatrix* point_groups, Cells* cells) {
@@ -186,9 +192,11 @@ void write_point_centers(IntMatrix* points, IntMatrix* point_centers, IntArray* 
 
   for (int i = 0; i < points->height; i++) {
     IntArray* cur_point = points->matrix[i];
+    int cur_point_idx = get_point_idx(cur_point, dims);
+    //fprintf(stream, "%d ", cur_point_idx);
     write_int_arr(cur_point, stream);
     fputc(' ', stream);
-    IntArray* cur_centers = point_centers->matrix[get_point_idx(cur_point, dims)];
+    IntArray* cur_centers = point_centers->matrix[cur_point_idx];
     for (int j = 0; j < point_centers->width; j++) {
       fprintf(stream, "%d", cur_centers->items[j]);
       fputc(' ', stream);

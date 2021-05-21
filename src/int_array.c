@@ -88,5 +88,6 @@ bool same_int_arr(IntArray* a, IntArray* b) {
   for (int i = 0; i < a->size; i++)
     if (a->items[i] != b->items[i])
       return false;
+
   return true;
 }

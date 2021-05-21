@@ -19,8 +19,8 @@ IntMatrix* add_bounds_to_int_array(IntArray* arr, int start, int end) {
 IntArray* get_bounding_box_dims(IntMatrix* box) {
   IntArray* dims = init_int_array(box->width); // TODO is this set
   for (int i = 0; i < box->width; i++)
-    // TODO is this correct?
-    dims->items[i] = box->matrix[1]->items[i] - box->matrix[0]->items[i];
+    add_to_int_arr(dims, box->matrix[1]->items[i] - box->matrix[0]->items[i]);
+  // TODO is this correct?
   return dims;
 }
 
