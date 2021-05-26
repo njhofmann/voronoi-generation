@@ -55,7 +55,8 @@ Cells* init_cells(IntMatrix* centers) {
 
 Cells* create_voronoi_diagram(IntMatrix* centers, IntMatrix* points, DistanceMetric metric, int p) {
   Cells* cells = init_cells(centers);
-  // TODO multithreading?
+  // TODO multithreading / multiprocessing
+  // splits `points` across n threads / processes
   for (int i = 0; i < points->height; i++) {
     IntArray* cur_point = points->matrix[i];
     int closest_center_idx = closest_center(cur_point, centers, metric, p);
@@ -94,6 +95,7 @@ IntMatrix* compute_centers(Cells* cells) {
   /**
    * Computes a center point for each given Cell
    */
+  // TODO multithreading vs multiprocessing here
   IntMatrix* centers = init_empty_int_matrix(cells->size);
   for (int i = 0; i < cells->size; i++)
     add_int_matrix(centers, compute_center(cells->cells[i]));
@@ -193,7 +195,6 @@ void write_point_centers(IntMatrix* points, IntMatrix* point_centers, IntArray* 
   for (int i = 0; i < points->height; i++) {
     IntArray* cur_point = points->matrix[i];
     int cur_point_idx = get_point_idx(cur_point, dims);
-    //fprintf(stream, "%d ", cur_point_idx);
     write_int_arr(cur_point, stream);
     fputc(' ', stream);
     IntArray* cur_centers = point_centers->matrix[cur_point_idx];

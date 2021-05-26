@@ -9,5 +9,6 @@
 
 IntMatrix* get_points_in_bounding_box(IntMatrix* box);
 IntArray* get_bounding_box_dims(IntMatrix* box);
+void valid_centers(IntMatrix* box, IntMatrix* centers);
 
 #endif //VORONOI_GENERATION_SRC_POINTS_H_

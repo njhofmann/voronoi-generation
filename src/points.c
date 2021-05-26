@@ -24,6 +24,22 @@ IntArray* get_bounding_box_dims(IntMatrix* box) {
   return dims;
 }
 
+void valid_centers(IntMatrix* box, IntMatrix* centers) {
+  for (int i = 0; i < centers->height; i++) {
+    IntArray* cur_center = centers->matrix[i];
+    for (int j = 0; j < cur_center->size; j++) {
+      int cur_dim_low = box->matrix[0]->items[j];
+      int cur_dim_high = box->matrix[1]->items[j];
+      int cur_item = cur_center->items[j];
+      if (cur_item < cur_dim_low || cur_dim_high <= cur_item) {
+        fprintf(stderr, "%d-th item of %d-th center %d is not between [%d, %d)",
+                j, i, cur_item, cur_dim_low, cur_dim_high);
+        exit(EXIT_FAILURE);
+      }
+    }
+  }
+}
+
 IntMatrix* get_points_in_bounding_box(IntMatrix* box) {
   /**
    * Returns an IntMatrix of all the points in the given bounding box

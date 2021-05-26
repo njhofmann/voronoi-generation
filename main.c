@@ -139,6 +139,8 @@ int main(int argc, char* argv[]) {
     exit(EXIT_FAILURE);
   }
 
+  valid_centers(bounding_box, starting_centers);
+
   IntMatrix* points = get_points_in_bounding_box(bounding_box);
   IntArray* dims = get_bounding_box_dims(bounding_box);
   voronoi_relaxation(dims, points, starting_centers, distance_metric, iterations, convergence, output_dirc, full_output, p);

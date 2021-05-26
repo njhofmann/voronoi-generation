@@ -27,16 +27,13 @@
     1. docs
     1. read me
     1. random centers
+    1. multi processing & multi threading
     1. when does it fail?
-    1. valid centers check
-    1. mahalanobis dist?
+    1. valid centers chec
     1. redo matrix width
         1. make rows point to null, only append
         1. tension between int arrays that are being resized and int matrix
         1. how to create a new empty int matrix with a "width" if width relies on int arrays
-    1. multithreading?
-    1. performance checks
-    1. docs
 
 1. misc
     1. higher order voronoi diagrams
