@@ -37,6 +37,7 @@ def load_point_groups(path: str) -> list[tuple[list[int], list[int]]]:
 
 def display_voronoi(point_groups: list[tuple[list[int], list[int]]], centers: list[list[list[int]]],
                     colors: list[list[int]], save_path: str) -> None:
+    # TODo multiprocessing here
     size = tuple([x + 1 for x in point_groups[-1][0]])
     imgs = [pi.new('RGB', size) for _ in range(len(point_groups[0][1]))]
     # TODO multiprocessing here

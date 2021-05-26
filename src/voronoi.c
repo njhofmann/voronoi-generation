@@ -53,22 +53,26 @@ Cells* init_cells(IntMatrix* centers) {
   return cells;
 }
 
-Cells* create_voronoi_diagram(IntMatrix* centers, IntMatrix* points, DistanceMetric metric, int p) {
+Cells* create_voronoi_diagram(IntMatrix* centers, IntMatrix* points, DistanceMetric metric, int p, int process_cnt) {
   Cells* cells = init_cells(centers);
-  // TODO multithreading / multiprocessing
-  // splits `points` across n threads / processes
-  for (int i = 0; i < points->height; i++) {
-    IntArray* cur_point = points->matrix[i];
-    int closest_center_idx = closest_center(cur_point, centers, metric, p);
-    add_int_matrix(cells->cells[closest_center_idx]->points, cur_point);
-  }
+  if (process_cnt == 1) {
+    for (int i = 0; i < points->height; i++) {
+      IntArray* cur_point = points->matrix[i];
+      int closest_center_idx = closest_center(cur_point, centers, metric, p);
+      add_int_matrix(cells->cells[closest_center_idx]->points, cur_point);
+    }
 
-  // edge case when there are duplicate centers and only the first instance has points added
-  // add center itself so there is something
-  for (int i = 0; i < cells->size; i++) {
-    Cell* cur_cell = cells->cells[i];
-    if (cur_cell->points->height < 1)
-      add_int_matrix(cur_cell->points, cur_cell->center);
+    // edge case when there are duplicate centers and only the first instance has points added
+    // add center itself so there is something
+    for (int i = 0; i < cells->size; i++) {
+      Cell* cur_cell = cells->cells[i];
+      if (cur_cell->points->height < 1)
+        add_int_matrix(cur_cell->points, cur_cell->center);
+    }
+  }
+  else {
+    // TODO multiprocessing here
+    // split across n processes, merge results
   }
 
   return cells;
@@ -91,14 +95,18 @@ IntArray* compute_center(Cell* cell) {
   return center;
 }
 
-IntMatrix* compute_centers(Cells* cells) {
+IntMatrix* compute_centers(Cells* cells, int process_cnt) {
   /**
    * Computes a center point for each given Cell
    */
-  // TODO multithreading vs multiprocessing here
   IntMatrix* centers = init_empty_int_matrix(cells->size);
-  for (int i = 0; i < cells->size; i++)
-    add_int_matrix(centers, compute_center(cells->cells[i]));
+  if (process_cnt == 1) {
+    for (int i = 0; i < cells->size; i++)
+      add_int_matrix(centers, compute_center(cells->cells[i]));
+  }
+  else {
+    // TODO multiprocessing here
+  }
   return centers;
 }
 
@@ -219,7 +227,8 @@ void write_all_centers(IntTensor* all_centers, char* output_dirc) {
 }
 
 void voronoi_relaxation(IntArray* dimensions, IntMatrix* points, IntMatrix* centers, DistanceMetric metric,
-                        int iterations, double converge_threshold, char* output_dirc, bool full_output, int p) {
+                        int iterations, double converge_threshold, char* output_dirc, bool full_output,
+                        int process_cnt, int p) {
   /**
    * Executes iterations of Voronoi relaxation from the given set of starting points and centers, using the given
    * DistanceMetric
@@ -242,8 +251,8 @@ void voronoi_relaxation(IntArray* dimensions, IntMatrix* points, IntMatrix* cent
   IntMatrix* new_centers;
   bool finished = false;
   while (!finished) {
-    Cells* voronoi_diagram = create_voronoi_diagram(centers, points, metric, p);
-    new_centers = compute_centers(voronoi_diagram);
+    Cells* voronoi_diagram = create_voronoi_diagram(centers, points, metric, p, process_cnt);
+    new_centers = compute_centers(voronoi_diagram, process_cnt);
 
     if (converge_threshold > 0)
       converged = convergence_threshold_met(converge_threshold, centers, new_centers);
@@ -257,10 +266,8 @@ void voronoi_relaxation(IntArray* dimensions, IntMatrix* points, IntMatrix* cent
       record_point_assigns(dimensions, point_centers, voronoi_diagram);
       add_matrix_to_int_tensor(all_centers, centers);
     }
-      // print_cells(voronoi_diagram, stream);
 
     free_cells(voronoi_diagram);
-
     centers = new_centers;
   }
 

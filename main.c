@@ -21,10 +21,11 @@ static struct option LONG_OPTIONS[] = {
     {"p", required_argument, NULL, 'p'},
     {"full", no_argument, NULL, 'f'},
     {"override", no_argument, NULL, 'r'},
+    {"processes", required_argument, NULL, 'm'},
     {NULL, 0, NULL, 0}
 };
 
-static bool FOUND_OPTIONS[9] = {false, false, false, false, false, false, false, false, false};
+static bool FOUND_OPTIONS[10] = {false, false, false, false, false, false, false, false, false, false};
 
 void found_option(int idx, const char* name) {
   if (FOUND_OPTIONS[idx]) {
@@ -64,12 +65,13 @@ int main(int argc, char* argv[]) {
   char* output_dirc = NULL;
   bool override_results = false;
   int p = 2;
+  int num_of_processes = 1;
   IntMatrix* starting_centers;
   IntMatrix* bounding_box;
 
   // short options - : means required, :: means optional
   char cur_arg;
-  while ((cur_arg = getopt_long(argc, argv, "d:c:b:i:v:o:frp:", LONG_OPTIONS, NULL)) != -1) {
+  while ((cur_arg = getopt_long(argc, argv, "d:c:b:i:v:o:frp:c:", LONG_OPTIONS, NULL)) != -1) {
     switch (cur_arg) {
       case 'd':
         found_option(0, "distance");
@@ -107,6 +109,10 @@ int main(int argc, char* argv[]) {
         found_option(8, "override");
         override_results = true;
         break;
+      case 'm':
+        found_option(9, "multiple processes");
+        num_of_processes = parse_pos_num(argv[optind-1]);
+        break;
       case '?':
         fprintf(stderr, "unknown arg or arg with a missing required param `-%c`\n", optopt);
         exit(EXIT_FAILURE);
@@ -143,7 +149,8 @@ int main(int argc, char* argv[]) {
 
   IntMatrix* points = get_points_in_bounding_box(bounding_box);
   IntArray* dims = get_bounding_box_dims(bounding_box);
-  voronoi_relaxation(dims, points, starting_centers, distance_metric, iterations, convergence, output_dirc, full_output, p);
+  voronoi_relaxation(dims, points, starting_centers, distance_metric, iterations, convergence, output_dirc, full_output,
+                     num_of_processes, p);
 
   free_int_array(dims);
   free_int_matrix(bounding_box);
