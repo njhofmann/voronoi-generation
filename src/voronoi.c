@@ -6,10 +6,11 @@
 #include <math.h>
 #include <stdbool.h>
 #include <string.h>
+#include <sys/wait.h>
+#include <unistd.h>
+#include "cells.h"
 #include "voronoi.h"
 #include "int_tensor.h"
-
-static const int STARTING_CELL_SIZE = 10;
 
 int closest_center(IntArray* point, IntMatrix* centers, DistanceMetric distance_metric, int p) {
   /**
@@ -31,104 +32,137 @@ int closest_center(IntArray* point, IntMatrix* centers, DistanceMetric distance_
   return closest_idx;
 }
 
-Cell* init_cell(IntArray* center) {
+int* split_array(int array_length, int chunks) {
   /**
-   * Create a new Cell from the given IntArray
+   * Returns an array of indices for splitting up an array of the given length into `chunk` number of evenly sized
+   * subarrays, i-th index gives the starting index of the i-th chunk
+   *
+   * If the size of each chunk does not evenly factor into the array length, size of each chunk will be rounded up and
+   * the last chunk will be smaller than the earlier chunks
+   *
+   * Ex:) array of size 10 into two chunks --> {0, 5}
+   *      10, 3 --> {0, 4, 8}
    */
-  Cell* cell = malloc(sizeof(Cell));
-  cell->center = center;
-  cell->points = init_empty_int_matrix(STARTING_CELL_SIZE);
-  return cell;
+  int* chunk_idxs = malloc(sizeof(int) * chunks);
+  int chunk_size = ceil((1.0 * array_length) / chunks);
+  int i = 0;
+  int cur_idx = 0;
+  do {
+    chunk_idxs[i] = cur_idx;
+    cur_idx += chunk_size;
+    i++;
+  } while (i < chunks);
+  return chunk_idxs;
 }
 
-Cells* init_cells(IntMatrix* centers) {
-  /**
-   * Inits an array of Cells from the given list of IntMatrices
-   */
-  Cells* cells = malloc(sizeof(Cells));
-  cells->cells = malloc(centers->height * sizeof(Cell*));
-  cells->size = centers->height;
-  for (int i = 0; i < centers->height; i++)
-    cells->cells[i] = init_cell(centers->matrix[i]);
-  return cells;
+int* assign_points(IntMatrix* centers, IntMatrix* points, int start_idx, int end_idx, DistanceMetric metric, int p) {
+  int length = end_idx - start_idx;
+  int* assigned_centers = malloc(sizeof(int) * length);
+  for (int i = 0; i < length; i++) {
+    IntArray* cur_point = points->matrix[start_idx + i];
+    int closest_center_idx = closest_center(cur_point, centers, metric, p);
+    assigned_centers[i] = closest_center_idx;
+  }
+  return assigned_centers;
+}
+
+int** init_child_pipes(int cnt) {
+  int** pipes = malloc(sizeof(int*) * cnt);
+  for (int i = 0; i < cnt; i++) {
+    pipes[i] = malloc(sizeof(int) * 2);
+    if (pipe(pipes[i]) == -1) {
+      fprintf(stderr, "failed to create child pipes");
+      exit(EXIT_FAILURE);
+    }
+  }
+  return pipes;
+}
+
+void free_child_pipes(int** pipes, int cnt) {
+  for (int i = 0; i < cnt; i++)
+    free(pipes[i]);
+  free(pipes);
+}
+
+int* get_chunk_byte_sizes(int* idxs, int cnt, int arr_len) {
+  int* sizes = malloc(sizeof(int) * cnt);
+  for (int i = 0; i < cnt; i++) {
+    int next_idx = (i == cnt - 1) ? arr_len : idxs[i + 1];
+    sizes[i] = sizeof(int) * (next_idx - idxs[i]);
+  }
+  return sizes;
 }
 
 Cells* create_voronoi_diagram(IntMatrix* centers, IntMatrix* points, DistanceMetric metric, int p, int process_cnt) {
-  Cells* cells = init_cells(centers);
-  if (process_cnt == 1) {
-    for (int i = 0; i < points->height; i++) {
-      IntArray* cur_point = points->matrix[i];
-      int closest_center_idx = closest_center(cur_point, centers, metric, p);
-      add_int_matrix(cells->cells[closest_center_idx]->points, cur_point);
-    }
+  int* chunks_idxs = split_array(points->height, process_cnt);
+  int** child_pipes = init_child_pipes(process_cnt);
+  int* chunk_byte_sizes = get_chunk_byte_sizes(chunks_idxs, process_cnt, points->height);
+  for (int i = 1; i < process_cnt; i++) {
+    pid_t pid = fork();
+    if (pid == 0) {
+      // close all read pipes
+      // close all other write pipes to all other children
+      for (int j = 0; j < process_cnt; j++) {
+        close(child_pipes[j][0]);
+        if (i != j)
+          close(child_pipes[j][1]);
+      }
 
-    // edge case when there are duplicate centers and only the first instance has points added
-    // add center itself so there is something
-    for (int i = 0; i < cells->size; i++) {
-      Cell* cur_cell = cells->cells[i];
-      if (cur_cell->points->height < 1)
-        add_int_matrix(cur_cell->points, cur_cell->center);
+      // TODO error handling for write, read, and close?
+      int start_idx = chunks_idxs[i];
+      int end_idx = (i == process_cnt - 1) ? points->height : chunks_idxs[i + 1];
+      int* assigned_centers = assign_points(centers, points, start_idx, end_idx, metric, p);
+      write(child_pipes[i][1], assigned_centers, chunk_byte_sizes[i]);
+      exit(0); // exit so no loop
+    }
+    else if (pid < 0) { // child < 0
+      fprintf(stderr, "failed to create child processes");
+      exit(1);
     }
   }
-  else {
-    // TODO multiprocessing here
-    // split across n processes, merge results
+
+  int** all_assigned_centers = malloc(sizeof(int*) * process_cnt);
+  int end_idx = (0 == process_cnt - 1) ? points->height : chunks_idxs[1];
+  all_assigned_centers[0] = assign_points(centers, points, 0, end_idx, metric, p);
+
+  for (int i = 1; i < process_cnt; i++)
+    wait(NULL);
+
+  // merge cells
+  for (int i = 1; i < process_cnt; i++) {
+    close(child_pipes[i][1]); // close writing end
+    read(child_pipes[i][0], &all_assigned_centers[i], chunk_byte_sizes[i]); // read in cell
+    close(child_pipes[i][0]); // close read end when done
   }
+
+  Cells* cells = init_cells(centers);
+  int k = 0;
+  for (int i = 0; i < process_cnt; i++) {
+    end_idx = (i == process_cnt - 1) ? points->height : chunks_idxs[i + 1];
+    int cur_chunk_size = end_idx - chunks_idxs[i];
+    for (int j = 0; j < cur_chunk_size; j++) {
+      int cur_center_idx = all_assigned_centers[i][j];
+      add_int_matrix(cells->cells[cur_center_idx]->points, points->matrix[k]);
+      k++;
+    }
+  }
+
+  // edge case: when there are duplicate centers and only the first instance has points added
+  // add center itself so there is something
+  for (int i = 0; i < cells->size; i++) {
+    Cell* cur_cell = cells->cells[i];
+    if (cur_cell->points->height < 1)
+      add_int_matrix(cur_cell->points, cur_cell->center);
+  }
+
+  free_child_pipes(child_pipes, process_cnt);
+  for (int i = 0; i < process_cnt; i++)
+    free(all_assigned_centers[i]);
+  free(all_assigned_centers);
+  free(chunk_byte_sizes);
+  free(chunks_idxs);
 
   return cells;
-}
-
-IntArray* compute_center(Cell* cell) {
-  /**
-   * Computes a new center point by averaging each across point in the given Cell, dimension-wise (i.e. average across
-   * 1-st index, 2-nd index, ..., i-th index, etc.)
-   */
-  IntArray* center = init_int_array(cell->points->width);
-  center->size = cell->points->width;
-  for (int i = 0; i < cell->points->height; i++)
-    for (int j = 0; j < center->size; j++)
-      center->items[j] += cell->points->matrix[i]->items[j];
-
-  for (int j = 0; j < center->size; j++)
-    center->items[j] = (int)round(center->items[j] / (1.0 * cell->points->height));
-
-  return center;
-}
-
-IntMatrix* compute_centers(Cells* cells, int process_cnt) {
-  /**
-   * Computes a center point for each given Cell
-   */
-  IntMatrix* centers = init_empty_int_matrix(cells->size);
-  if (process_cnt == 1) {
-    for (int i = 0; i < cells->size; i++)
-      add_int_matrix(centers, compute_center(cells->cells[i]));
-  }
-  else {
-    // TODO multiprocessing here
-  }
-  return centers;
-}
-
-void print_cell(Cell* cell, FILE* output_file) {
-  /**
-   * Writes the given Cell to the given FILE stream in the following manner
-   *
-   * center | a1,a2,a3 b1,b2,b3 ...
-   */
-  write_int_arr(cell->center, output_file);
-  fprintf(output_file, " | ");
-  write_int_matrix(cell->points, output_file);
-  fputc('\n', output_file);
-}
-
-void print_cells(Cells* cells, FILE* output_file) {
-  /**
-   * Prints the given Cells to the given FILE stream
-   */
-  for (int i = 0; i < cells->size; i++)
-    print_cell(cells->cells[i], output_file);
-  fputc('\n', output_file);
 }
 
 double center_dist(IntArray* a, IntArray* b) {
@@ -146,25 +180,6 @@ bool convergence_threshold_met(double converge_threshold, IntMatrix* old_centers
     if (converge_threshold > center_dist(old_centers->matrix[i], new_centers->matrix[i]))
       return true;
   return false;
-}
-
-void free_cell(Cell* cell) {
-  /**
-   * Free the given Cell and its underlying IntMatrix, but not the center point or the points underlying the IntMatrix
-   */
-  free_int_matrix_no_data(cell->points);
-  free(cell);
-}
-
-void free_cells(Cells* cells) {
-  /**
-   * Frees the given array of Cells, but not the underlying IntArrays. Assumes the latter are freed by other data
-   * structures.
-   */
-  for (int i = 0; i < cells->size; i++)
-    free_cell(cells->cells[i]);
-  free(cells->cells);
-  free(cells);
 }
 
 int get_point_idx(IntArray* point, IntArray* dims) {
@@ -186,7 +201,7 @@ IntMatrix* record_point_assigns(IntArray* dims, IntMatrix* point_groups, Cells* 
 }
 
 char* add_str(char* src, const char* add) {
-  char* dest = calloc(strlen(src) + strlen(add) + 2, sizeof(char ));
+  char* dest = calloc(strlen(src) + strlen(add) + 2, sizeof(char));
   dest = strcpy(dest, src);
   dest = strcat(dest, "/");
   return strcat(dest, add);

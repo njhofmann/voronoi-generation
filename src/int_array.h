@@ -5,6 +5,12 @@
 #ifndef VORONOI_GENERATION__INT_ARRAY_H_
 #define VORONOI_GENERATION__INT_ARRAY_H_
 
+#include <unistd.h>
+#include <sys/wait.h>
+#include <string.h>
+#include <stdbool.h>
+#include <stdio.h>
+
 #include <stdbool.h>
 /**
  * A resizeable array of ints

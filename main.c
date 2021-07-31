@@ -71,7 +71,7 @@ int main(int argc, char* argv[]) {
 
   // short options - : means required, :: means optional
   char cur_arg;
-  while ((cur_arg = getopt_long(argc, argv, "d:c:b:i:v:o:frp:c:", LONG_OPTIONS, NULL)) != -1) {
+  while ((cur_arg = getopt_long(argc, argv, "d:c:b:i:v:o:frp:c:m:", LONG_OPTIONS, NULL)) != -1) {
     switch (cur_arg) {
       case 'd':
         found_option(0, "distance");
