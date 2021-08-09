@@ -11,6 +11,7 @@
 #include "cells.h"
 #include "voronoi.h"
 #include "int_tensor.h"
+#include "wrapper_io.h"
 
 int closest_center(IntArray* point, IntMatrix* centers, DistanceMetric distance_metric, int p) {
   /**
@@ -97,48 +98,52 @@ Cells* create_voronoi_diagram(IntMatrix* centers, IntMatrix* points, DistanceMet
   int* chunks_idxs = split_array(points->height, process_cnt);
   int** child_pipes = init_child_pipes(process_cnt);
   int* chunk_byte_sizes = get_chunk_byte_sizes(chunks_idxs, process_cnt, points->height);
-  for (int i = 1; i < process_cnt; i++) {
-    pid_t pid = fork();
-    if (pid == 0) {
-      // close all read pipes
-      // close all other write pipes to all other children
+  pid_t children[process_cnt];
+  for (int i = 0; i < process_cnt; i++) {
+    if ((children[i] = fork()) == 0) {
+      // close pipes for all other child processes
       for (int j = 0; j < process_cnt; j++) {
         close(child_pipes[j][0]);
         if (i != j)
           close(child_pipes[j][1]);
       }
 
-      // TODO error handling for write, read, and close?
-      int start_idx = chunks_idxs[i];
       int end_idx = (i == process_cnt - 1) ? points->height : chunks_idxs[i + 1];
-      int* assigned_centers = assign_points(centers, points, start_idx, end_idx, metric, p);
-      write(child_pipes[i][1], assigned_centers, chunk_byte_sizes[i]);
+      int* assigned_centers = assign_points(centers, points, chunks_idxs[i], end_idx, metric, p);
+      exact_write(child_pipes[i][1], assigned_centers, chunk_byte_sizes[i]);
+      close(child_pipes[i][1]);
       exit(0); // exit so no loop
     }
-    else if (pid < 0) { // child < 0
+    else if (children[i] < 0) { // child < 0
       fprintf(stderr, "failed to create child processes");
       exit(1);
     }
   }
 
-  int** all_assigned_centers = malloc(sizeof(int*) * process_cnt);
-  int end_idx = (0 == process_cnt - 1) ? points->height : chunks_idxs[1];
-  all_assigned_centers[0] = assign_points(centers, points, 0, end_idx, metric, p);
+//  int** all_assigned_centers = malloc(sizeof(int*) * process_cnt);
+//  int start_idx = chunks_idxs[0];
+//  int end_idx = (0 == process_cnt - 1) ? points->height : chunks_idxs[0 + 1];
+//  int* assigned_centers = assign_points(centers, points, start_idx, end_idx, metric, p);
+//  all_assigned_centers[0] = assigned_centers;
 
-  for (int i = 1; i < process_cnt; i++)
-    wait(NULL);
+  int status;
+  for (int i = 0; i < process_cnt; i++) {
+    waitpid(children[i], &status, 0);
+  }
 
   // merge cells
-  for (int i = 1; i < process_cnt; i++) {
-    close(child_pipes[i][1]); // close writing end
-    read(child_pipes[i][0], &all_assigned_centers[i], chunk_byte_sizes[i]); // read in cell
-    close(child_pipes[i][0]); // close read end when done
+  int** all_assigned_centers = malloc(sizeof(int*) * process_cnt);
+  for (int i = 0; i < process_cnt; i++) {
+    close(child_pipes[i][1]); // close write end
+    all_assigned_centers[i] = malloc(chunk_byte_sizes[i]);
+    exact_read(child_pipes[i][0], all_assigned_centers[i], chunk_byte_sizes[i]);
+    close(child_pipes[i][0]); // close read end
   }
 
   Cells* cells = init_cells(centers);
   int k = 0;
   for (int i = 0; i < process_cnt; i++) {
-    end_idx = (i == process_cnt - 1) ? points->height : chunks_idxs[i + 1];
+    int end_idx = (i == process_cnt - 1) ? points->height : chunks_idxs[i + 1];
     int cur_chunk_size = end_idx - chunks_idxs[i];
     for (int j = 0; j < cur_chunk_size; j++) {
       int cur_center_idx = all_assigned_centers[i][j];
@@ -147,20 +152,20 @@ Cells* create_voronoi_diagram(IntMatrix* centers, IntMatrix* points, DistanceMet
     }
   }
 
-  // edge case: when there are duplicate centers and only the first instance has points added
-  // add center itself so there is something
-  for (int i = 0; i < cells->size; i++) {
-    Cell* cur_cell = cells->cells[i];
-    if (cur_cell->points->height < 1)
-      add_int_matrix(cur_cell->points, cur_cell->center);
-  }
-
   free_child_pipes(child_pipes, process_cnt);
   for (int i = 0; i < process_cnt; i++)
     free(all_assigned_centers[i]);
   free(all_assigned_centers);
   free(chunk_byte_sizes);
   free(chunks_idxs);
+
+  // edge case: when duplicate centers and only the first instance has points added, add center to itself so there is
+  // at least one point to process
+  for (int i = 0; i < cells->size; i++) {
+    Cell* cur_cell = cells->cells[i];
+    if (cur_cell->points->height < 1)
+      add_int_matrix(cur_cell->points, cur_cell->center);
+  }
 
   return cells;
 }

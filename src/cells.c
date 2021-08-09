@@ -23,7 +23,7 @@ Cells* init_cells(IntMatrix* centers) {
   /**
    * Inits an array of Cells from the given list of IntMatrices
    */
-  Cells* cells = malloc(sizeof(Cells));
+  Cells* cells = malloc(sizeof(Cells) * 1);
   cells->cells = malloc(centers->height * sizeof(Cell*));
   cells->size = centers->height;
   for (int i = 0; i < centers->height; i++)
