@@ -21,6 +21,9 @@ typedef struct {
   int size;       // allocated space
 } IntArray;
 
+/**
+ * Initializes a new IntArray with the given amount of unallocated slots
+ */
 IntArray* init_int_array(int size);
 void free_int_array(IntArray* arr);
 void add_to_int_arr(IntArray* arr, int item);

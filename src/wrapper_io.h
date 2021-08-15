@@ -5,10 +5,6 @@
 #ifndef VORONOI_GENERATION_SRC_WRAPPER_IO_H_
 #define VORONOI_GENERATION_SRC_WRAPPER_IO_H_
 
-//
-// Created by natejh on 8/9/21.
-//
-
 #include <stddef.h>
 #include <unistd.h>
 #include <stdlib.h>

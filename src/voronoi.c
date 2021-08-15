@@ -3,7 +3,6 @@
 //
 
 #include <stdlib.h>
-#include <math.h>
 #include <stdbool.h>
 #include <string.h>
 #include <sys/wait.h>
@@ -12,6 +11,8 @@
 #include "voronoi.h"
 #include "int_tensor.h"
 #include "wrapper_io.h"
+#include "util.h"
+#include "pipes.h"
 
 int closest_center(IntArray* point, IntMatrix* centers, DistanceMetric distance_metric, int p) {
   /**
@@ -33,29 +34,6 @@ int closest_center(IntArray* point, IntMatrix* centers, DistanceMetric distance_
   return closest_idx;
 }
 
-int* split_array(int array_length, int chunks) {
-  /**
-   * Returns an array of indices for splitting up an array of the given length into `chunk` number of evenly sized
-   * subarrays, i-th index gives the starting index of the i-th chunk
-   *
-   * If the size of each chunk does not evenly factor into the array length, size of each chunk will be rounded up and
-   * the last chunk will be smaller than the earlier chunks
-   *
-   * Ex:) array of size 10 into two chunks --> {0, 5}
-   *      10, 3 --> {0, 4, 8}
-   */
-  int* chunk_idxs = malloc(sizeof(int) * chunks);
-  int chunk_size = ceil((1.0 * array_length) / chunks);
-  int i = 0;
-  int cur_idx = 0;
-  do {
-    chunk_idxs[i] = cur_idx;
-    cur_idx += chunk_size;
-    i++;
-  } while (i < chunks);
-  return chunk_idxs;
-}
-
 int* assign_points(IntMatrix* centers, IntMatrix* points, int start_idx, int end_idx, DistanceMetric metric, int p) {
   int length = end_idx - start_idx;
   int* assigned_centers = malloc(sizeof(int) * length);
@@ -65,24 +43,6 @@ int* assign_points(IntMatrix* centers, IntMatrix* points, int start_idx, int end
     assigned_centers[i] = closest_center_idx;
   }
   return assigned_centers;
-}
-
-int** init_child_pipes(int cnt) {
-  int** pipes = malloc(sizeof(int*) * cnt);
-  for (int i = 0; i < cnt; i++) {
-    pipes[i] = malloc(sizeof(int) * 2);
-    if (pipe(pipes[i]) == -1) {
-      fprintf(stderr, "failed to create child pipes");
-      exit(EXIT_FAILURE);
-    }
-  }
-  return pipes;
-}
-
-void free_child_pipes(int** pipes, int cnt) {
-  for (int i = 0; i < cnt; i++)
-    free(pipes[i]);
-  free(pipes);
 }
 
 int* get_chunk_byte_sizes(int* idxs, int cnt, int arr_len) {
@@ -101,30 +61,19 @@ Cells* create_voronoi_diagram(IntMatrix* centers, IntMatrix* points, DistanceMet
   pid_t children[process_cnt];
   for (int i = 0; i < process_cnt; i++) {
     if ((children[i] = fork()) == 0) {
-      // close pipes for all other child processes
-      for (int j = 0; j < process_cnt; j++) {
-        close(child_pipes[j][0]);
-        if (i != j)
-          close(child_pipes[j][1]);
-      }
+      close_all_other_pipes(child_pipes, process_cnt, i);
 
       int end_idx = (i == process_cnt - 1) ? points->height : chunks_idxs[i + 1];
       int* assigned_centers = assign_points(centers, points, chunks_idxs[i], end_idx, metric, p);
       exact_write(child_pipes[i][1], assigned_centers, chunk_byte_sizes[i]);
       close(child_pipes[i][1]);
-      exit(0); // exit so no loop
+      exit(0);
     }
     else if (children[i] < 0) { // child < 0
       fprintf(stderr, "failed to create child processes");
       exit(1);
     }
   }
-
-//  int** all_assigned_centers = malloc(sizeof(int*) * process_cnt);
-//  int start_idx = chunks_idxs[0];
-//  int end_idx = (0 == process_cnt - 1) ? points->height : chunks_idxs[0 + 1];
-//  int* assigned_centers = assign_points(centers, points, start_idx, end_idx, metric, p);
-//  all_assigned_centers[0] = assigned_centers;
 
   int status;
   for (int i = 0; i < process_cnt; i++) {
@@ -197,6 +146,7 @@ IntMatrix* record_point_assigns(IntArray* dims, IntMatrix* point_groups, Cells* 
     Cell* cur_cell = cells->cells[i];
     for (int j = 0; j < cur_cell->points->height; j++) {
       IntArray* cur_point = cur_cell->points->matrix[j];
+      // points may not be in order, need to get proper index
       int cur_point_idx = get_point_idx(cur_point, dims);
       add_to_int_arr(point_groups->matrix[cur_point_idx], i);
     }
@@ -283,7 +233,7 @@ void voronoi_relaxation(IntArray* dimensions, IntMatrix* points, IntMatrix* cent
     finished = iterations == 0 || converged;
 
     if (full_output || finished) {
-      record_point_assigns(dimensions, point_centers, voronoi_diagram);
+      point_centers = record_point_assigns(dimensions, point_centers, voronoi_diagram);
       add_matrix_to_int_tensor(all_centers, centers);
     }
 

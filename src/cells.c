@@ -2,10 +2,12 @@
 // Created by natejh on 7/26/21.
 //
 
-#include "int_tensor.h"
 #include <math.h>
 #include <stdlib.h>
+#include "util.h"
 #include "cells.h"
+#include "wrapper_io.h"
+#include "pipes.h"
 
 static const int STARTING_CELL_SIZE = 10;
 
@@ -47,6 +49,16 @@ IntArray* compute_center(Cell* cell) {
 
   return center;
 }
+
+int* compute_chunk_byte_sizes(int* idxs, int cnt, int arr_len, int dims) {
+  int* sizes = malloc(sizeof(int) * cnt);
+  for (int i = 0; i < cnt; i++) {
+    int next_idx = (i == cnt - 1) ? arr_len : idxs[i + 1];
+    sizes[i] = sizeof(int) * (next_idx - idxs[i]) * dims;
+  }
+  return sizes;
+}
+
 IntMatrix* compute_centers(Cells* cells, int process_cnt) {
   /**
    * Computes a center point for each given Cell
@@ -55,10 +67,72 @@ IntMatrix* compute_centers(Cells* cells, int process_cnt) {
   if (process_cnt == 1) {
     for (int i = 0; i < cells->size; i++)
       add_int_matrix(centers, compute_center(cells->cells[i]));
+    return centers;
   }
-  else {
-    // TODO multiprocessing here
+
+  int* chunks_idxs = split_array(cells->size, process_cnt);
+  int** child_pipes = init_child_pipes(process_cnt);
+  int dims = cells->cells[0]->center->size;
+  int* chunk_byte_sizes = compute_chunk_byte_sizes(chunks_idxs, process_cnt, cells->size, dims);
+  pid_t children[process_cnt];
+  for (int i = 0; i < process_cnt; i++) {
+    if ((children[i] = fork()) == 0) {
+      close_all_other_pipes(child_pipes, process_cnt, i);
+      int start_idx = chunks_idxs[i];
+      int end_idx = (i == process_cnt - 1) ? cells->size : chunks_idxs[i + 1];
+      int* child_centers = malloc(chunk_byte_sizes[i]);
+      int idx = 0;
+      for (int j = start_idx; j < end_idx; j++) {
+        IntArray* center = compute_center(cells->cells[j]);
+        for (int k = 0; k < center->size; k++) {
+          child_centers[idx] = center->items[k];
+        }
+      }
+      exact_write(child_pipes[i][1], child_centers, chunk_byte_sizes[i]);
+      close(child_pipes[i][1]);
+      exit(0);
+    }
+    else if (children[i] < 0) { // child < 0
+      fprintf(stderr, "failed to create child processes");
+      exit(1);
+    }
   }
+
+  int status;
+  for (int i = 0; i < process_cnt; i++) {
+    waitpid(children[i], &status, 0);
+  }
+
+  // merge centers
+  int** raw_centers = malloc(sizeof(int*) * process_cnt);
+  for (int i = 0; i < process_cnt; i++) {
+    close(child_pipes[i][1]); // close write end
+    raw_centers[i] = malloc(chunk_byte_sizes[i]);
+    exact_read(child_pipes[i][0], raw_centers[i], chunk_byte_sizes[i]);
+    close(child_pipes[i][0]); // close read end
+  }
+
+  // int** --> IntMatrix*
+  for (int i = 0; i < process_cnt; i++) {
+    int end_idx = (i == process_cnt - 1) ? cells->size : chunks_idxs[i + 1];
+    int cur_chunk_size = end_idx - chunks_idxs[i];
+    int m = 0;
+    for (int j = 0; j < cur_chunk_size; j++) {
+      IntArray* cur_center = init_int_array(dims);
+      for (int k = 0; k < dims; k++)
+        add_to_int_arr(cur_center, raw_centers[i][m]);
+      add_int_matrix(centers, cur_center);
+      m++;
+    }
+  }
+
+  free_child_pipes(child_pipes, process_cnt);
+  for (int i = 0; i < process_cnt; i++)
+    free(raw_centers[i]);
+  free(raw_centers);
+  free(chunk_byte_sizes);
+  free(chunks_idxs);
+
   return centers;
 }
 

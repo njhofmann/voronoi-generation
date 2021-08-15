@@ -10,9 +10,6 @@
 static const double INT_ARR_RESIZE_CONST = 1.4;
 
 IntArray* init_int_array(int size) {
-  /**
-   * Initializes a new IntArray with the given amount of unallocated slots
-   */
   if (size < 1) {
     fprintf(stderr, "int array must be of size 1");
     exit(EXIT_FAILURE);
