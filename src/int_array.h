@@ -5,6 +5,12 @@
 #ifndef VORONOI_GENERATION__INT_ARRAY_H_
 #define VORONOI_GENERATION__INT_ARRAY_H_
 
+#include <unistd.h>
+#include <sys/wait.h>
+#include <string.h>
+#include <stdbool.h>
+#include <stdio.h>
+
 #include <stdbool.h>
 /**
  * A resizeable array of ints
@@ -15,6 +21,9 @@ typedef struct {
   int size;       // allocated space
 } IntArray;
 
+/**
+ * Initializes a new IntArray with the given amount of unallocated slots
+ */
 IntArray* init_int_array(int size);
 void free_int_array(IntArray* arr);
 void add_to_int_arr(IntArray* arr, int item);

@@ -35,6 +35,8 @@ The executable accepts the following arguments in any order:
 
 - `--override [-r] {optional}`: if file under `--output` already exists, override it
 
+- `--processes [-m] {optional}`: number of processes to create for multiprocessing, default sto 1
+
 The results for each iteration are save in the following format:
 - each iteration is separated by a blank line
 - within each iteration, clusters / cells are on their own line

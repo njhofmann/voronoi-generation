@@ -3,13 +3,16 @@
 //
 
 #include <stdlib.h>
-#include <math.h>
 #include <stdbool.h>
 #include <string.h>
+#include <sys/wait.h>
+#include <unistd.h>
+#include "cells.h"
 #include "voronoi.h"
 #include "int_tensor.h"
-
-static const int STARTING_CELL_SIZE = 10;
+#include "wrapper_io.h"
+#include "util.h"
+#include "pipes.h"
 
 int closest_center(IntArray* point, IntMatrix* centers, DistanceMetric distance_metric, int p) {
   /**
@@ -31,40 +34,82 @@ int closest_center(IntArray* point, IntMatrix* centers, DistanceMetric distance_
   return closest_idx;
 }
 
-Cell* init_cell(IntArray* center) {
-  /**
-   * Create a new Cell from the given IntArray
-   */
-  Cell* cell = malloc(sizeof(Cell));
-  cell->center = center;
-  cell->points = init_empty_int_matrix(STARTING_CELL_SIZE);
-  return cell;
-}
-
-Cells* init_cells(IntMatrix* centers) {
-  /**
-   * Inits an array of Cells from the given list of IntMatrices
-   */
-  Cells* cells = malloc(sizeof(Cells));
-  cells->cells = malloc(centers->height * sizeof(Cell*));
-  cells->size = centers->height;
-  for (int i = 0; i < centers->height; i++)
-    cells->cells[i] = init_cell(centers->matrix[i]);
-  return cells;
-}
-
-Cells* create_voronoi_diagram(IntMatrix* centers, IntMatrix* points, DistanceMetric metric, int p) {
-  Cells* cells = init_cells(centers);
-  // TODO multithreading / multiprocessing
-  // splits `points` across n threads / processes
-  for (int i = 0; i < points->height; i++) {
-    IntArray* cur_point = points->matrix[i];
+int* assign_points(IntMatrix* centers, IntMatrix* points, int start_idx, int end_idx, DistanceMetric metric, int p) {
+  int length = end_idx - start_idx;
+  int* assigned_centers = malloc(sizeof(int) * length);
+  for (int i = 0; i < length; i++) {
+    IntArray* cur_point = points->matrix[start_idx + i];
     int closest_center_idx = closest_center(cur_point, centers, metric, p);
-    add_int_matrix(cells->cells[closest_center_idx]->points, cur_point);
+    assigned_centers[i] = closest_center_idx;
+  }
+  return assigned_centers;
+}
+
+int* get_chunk_byte_sizes(int* idxs, int cnt, int arr_len) {
+  int* sizes = malloc(sizeof(int) * cnt);
+  for (int i = 0; i < cnt; i++) {
+    int next_idx = (i == cnt - 1) ? arr_len : idxs[i + 1];
+    sizes[i] = sizeof(int) * (next_idx - idxs[i]);
+  }
+  return sizes;
+}
+
+Cells* create_voronoi_diagram(IntMatrix* centers, IntMatrix* points, DistanceMetric metric, int p, int process_cnt) {
+  int* chunks_idxs = split_array(points->height, process_cnt);
+  int** child_pipes = init_child_pipes(process_cnt);
+  int* chunk_byte_sizes = get_chunk_byte_sizes(chunks_idxs, process_cnt, points->height);
+  pid_t children[process_cnt];
+  for (int i = 0; i < process_cnt; i++) {
+    if ((children[i] = fork()) == 0) {
+      close_all_other_pipes(child_pipes, process_cnt, i);
+
+      int end_idx = (i == process_cnt - 1) ? points->height : chunks_idxs[i + 1];
+      int* assigned_centers = assign_points(centers, points, chunks_idxs[i], end_idx, metric, p);
+      exact_write(child_pipes[i][1], assigned_centers, chunk_byte_sizes[i]);
+      close(child_pipes[i][1]);
+      exit(0);
+    }
+    else if (children[i] < 0) { // child < 0
+      fprintf(stderr, "failed to create child processes");
+      exit(1);
+    }
   }
 
-  // edge case when there are duplicate centers and only the first instance has points added
-  // add center itself so there is something
+  int status;
+  for (int i = 0; i < process_cnt; i++) {
+    waitpid(children[i], &status, 0);
+  }
+
+  // merge cells
+  int** all_assigned_centers = malloc(sizeof(int*) * process_cnt);
+  for (int i = 0; i < process_cnt; i++) {
+    close(child_pipes[i][1]); // close write end
+    all_assigned_centers[i] = malloc(chunk_byte_sizes[i]);
+    exact_read(child_pipes[i][0], all_assigned_centers[i], chunk_byte_sizes[i]);
+    close(child_pipes[i][0]); // close read end
+  }
+
+  Cells* cells = init_cells(centers);
+  int k = 0;
+  for (int i = 0; i < process_cnt; i++) {
+    int end_idx = (i == process_cnt - 1) ? points->height : chunks_idxs[i + 1];
+    int cur_chunk_size = end_idx - chunks_idxs[i];
+    for (int j = 0; j < cur_chunk_size; j++) {
+      int cur_center_idx = all_assigned_centers[i][j];
+      add_int_matrix(cells->cells[cur_center_idx]->points, points->matrix[k]);
+      k++;
+    }
+  }
+
+  free_child_pipes(child_pipes, process_cnt);
+  for (int i = 0; i < process_cnt; i++)
+    free(all_assigned_centers[i]);
+  free(all_assigned_centers);
+  free(chunk_byte_sizes);
+  free(chunks_idxs);
+
+  // edge case: when duplicate centers and only the first instance has points added, add center to itself so there is
+  // at least one point to process
   for (int i = 0; i < cells->size; i++) {
     Cell* cur_cell = cells->cells[i];
     if (cur_cell->points->height < 1)
@@ -72,55 +117,6 @@ Cells* create_voronoi_diagram(IntMatrix* centers, IntMatrix* points, DistanceMet
   }
 
   return cells;
-}
-
-IntArray* compute_center(Cell* cell) {
-  /**
-   * Computes a new center point by averaging each across point in the given Cell, dimension-wise (i.e. average across
-   * 1-st index, 2-nd index, ..., i-th index, etc.)
-   */
-  IntArray* center = init_int_array(cell->points->width);
-  center->size = cell->points->width;
-  for (int i = 0; i < cell->points->height; i++)
-    for (int j = 0; j < center->size; j++)
-      center->items[j] += cell->points->matrix[i]->items[j];
-
-  for (int j = 0; j < center->size; j++)
-    center->items[j] = (int)round(center->items[j] / (1.0 * cell->points->height));
-
-  return center;
-}
-
-IntMatrix* compute_centers(Cells* cells) {
-  /**
-   * Computes a center point for each given Cell
-   */
-  // TODO multithreading vs multiprocessing here
-  IntMatrix* centers = init_empty_int_matrix(cells->size);
-  for (int i = 0; i < cells->size; i++)
-    add_int_matrix(centers, compute_center(cells->cells[i]));
-  return centers;
-}
-
-void print_cell(Cell* cell, FILE* output_file) {
-  /**
-   * Writes the given Cell to the given FILE stream in the following manner
-   *
-   * center | a1,a2,a3 b1,b2,b3 ...
-   */
-  write_int_arr(cell->center, output_file);
-  fprintf(output_file, " | ");
-  write_int_matrix(cell->points, output_file);
-  fputc('\n', output_file);
-}
-
-void print_cells(Cells* cells, FILE* output_file) {
-  /**
-   * Prints the given Cells to the given FILE stream
-   */
-  for (int i = 0; i < cells->size; i++)
-    print_cell(cells->cells[i], output_file);
-  fputc('\n', output_file);
 }
 
 double center_dist(IntArray* a, IntArray* b) {
@@ -140,25 +136,6 @@ bool convergence_threshold_met(double converge_threshold, IntMatrix* old_centers
   return false;
 }
 
-void free_cell(Cell* cell) {
-  /**
-   * Free the given Cell and its underlying IntMatrix, but not the center point or the points underlying the IntMatrix
-   */
-  free_int_matrix_no_data(cell->points);
-  free(cell);
-}
-
-void free_cells(Cells* cells) {
-  /**
-   * Frees the given array of Cells, but not the underlying IntArrays. Assumes the latter are freed by other data
-   * structures.
-   */
-  for (int i = 0; i < cells->size; i++)
-    free_cell(cells->cells[i]);
-  free(cells->cells);
-  free(cells);
-}
-
 int get_point_idx(IntArray* point, IntArray* dims) {
   // TODO generalize this to n-d
   return (dims->items[1] * point->items[0]) + point->items[1];
@@ -169,6 +146,7 @@ IntMatrix* record_point_assigns(IntArray* dims, IntMatrix* point_groups, Cells* 
     Cell* cur_cell = cells->cells[i];
     for (int j = 0; j < cur_cell->points->height; j++) {
       IntArray* cur_point = cur_cell->points->matrix[j];
+      // points may not be in order, need to get proper index
       int cur_point_idx = get_point_idx(cur_point, dims);
       add_to_int_arr(point_groups->matrix[cur_point_idx], i);
     }
@@ -178,7 +156,7 @@ IntMatrix* record_point_assigns(IntArray* dims, IntMatrix* point_groups, Cells* 
 }
 
 char* add_str(char* src, const char* add) {
-  char* dest = calloc(strlen(src) + strlen(add) + 2, sizeof(char ));
+  char* dest = calloc(strlen(src) + strlen(add) + 2, sizeof(char));
   dest = strcpy(dest, src);
   dest = strcat(dest, "/");
   return strcat(dest, add);
@@ -219,7 +197,8 @@ void write_all_centers(IntTensor* all_centers, char* output_dirc) {
 }
 
 void voronoi_relaxation(IntArray* dimensions, IntMatrix* points, IntMatrix* centers, DistanceMetric metric,
-                        int iterations, double converge_threshold, char* output_dirc, bool full_output, int p) {
+                        int iterations, double converge_threshold, char* output_dirc, bool full_output,
+                        int process_cnt, int p) {
   /**
    * Executes iterations of Voronoi relaxation from the given set of starting points and centers, using the given
    * DistanceMetric
@@ -242,8 +221,8 @@ void voronoi_relaxation(IntArray* dimensions, IntMatrix* points, IntMatrix* cent
   IntMatrix* new_centers;
   bool finished = false;
   while (!finished) {
-    Cells* voronoi_diagram = create_voronoi_diagram(centers, points, metric, p);
-    new_centers = compute_centers(voronoi_diagram);
+    Cells* voronoi_diagram = create_voronoi_diagram(centers, points, metric, p, process_cnt);
+    new_centers = compute_centers(voronoi_diagram, process_cnt);
 
     if (converge_threshold > 0)
       converged = convergence_threshold_met(converge_threshold, centers, new_centers);
@@ -254,13 +233,11 @@ void voronoi_relaxation(IntArray* dimensions, IntMatrix* points, IntMatrix* cent
     finished = iterations == 0 || converged;
 
     if (full_output || finished) {
-      record_point_assigns(dimensions, point_centers, voronoi_diagram);
+      point_centers = record_point_assigns(dimensions, point_centers, voronoi_diagram);
       add_matrix_to_int_tensor(all_centers, centers);
     }
-      // print_cells(voronoi_diagram, stream);
 
     free_cells(voronoi_diagram);
-
     centers = new_centers;
   }
 

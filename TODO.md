@@ -23,6 +23,9 @@
             1. output only final diagram, or each intermediate diagram
 
 1. to do
+    1. errono for error handling
+    1. 3d display
+    1. point assignment to array   
     1. help option
     1. docs
     1. read me
