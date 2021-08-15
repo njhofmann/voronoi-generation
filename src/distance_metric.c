@@ -145,9 +145,6 @@ double (*dist_func[10])(IntArray*, IntArray*, int) = {
 };
 
 DistanceMetric parse_distance_metric(char* raw_arg) {
-  /**
-   * Returns the distance metric corresponding to the given string, throws an error if invalid string
-   */
   if (streq(raw_arg, "euclidean"))
     return EUCLIDEAN;
   else if (streq(raw_arg, "manhattan"))
@@ -174,10 +171,6 @@ DistanceMetric parse_distance_metric(char* raw_arg) {
 }
 
 double compute_distance_metric(IntArray* a, IntArray* b, DistanceMetric metric, int p) {
-  /**
-   * Computes the distance between two given IntArrays using the given distance metric, assumes arrays are of the same
-   * length
-   */
   if (metric > 9 || metric < 0) {
     fprintf(stderr, "unsupported distance metric\n");
     exit(EXIT_FAILURE);

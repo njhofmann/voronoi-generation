@@ -7,7 +7,7 @@
 #include <unistd.h>
 #include "pipes.h"
 
-int** init_child_pipes(int cnt) {
+int** init_pipes(int cnt) {
   int** pipes = malloc(sizeof(int*) * cnt);
   for (int i = 0; i < cnt; i++) {
     pipes[i] = malloc(sizeof(int) * 2);
@@ -19,7 +19,7 @@ int** init_child_pipes(int cnt) {
   return pipes;
 }
 
-void free_child_pipes(int** pipes, int cnt) {
+void pipes(int** pipes, int cnt) {
   for (int i = 0; i < cnt; i++)
     free(pipes[i]);
   free(pipes);

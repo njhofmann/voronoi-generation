@@ -5,8 +5,15 @@
 #ifndef VORONOI_GENERATION_SRC_PIPES_H_
 #define VORONOI_GENERATION_SRC_PIPES_H_
 
-int** init_child_pipes(int cnt);
-void free_child_pipes(int** pipes, int cnt);
+/**
+ * Initiates `cnt` set of pipes
+ */
+int** init_pipes(int cnt);
+
+/**
+ * Frees the given set of `cnt` pipes
+ */
+void pipes(int** pipes, int cnt);
 
 /**
  * Given a set of pipes, closes every reading and writing pipe, except for the i-th writing pipe. Meant for use in an

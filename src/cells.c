@@ -12,9 +12,6 @@
 static const int STARTING_CELL_SIZE = 10;
 
 Cell* init_cell(IntArray* center) {
-  /**
-   * Create a new Cell from the given IntArray
-   */
   Cell* cell = malloc(sizeof(Cell));
   cell->center = center;
   cell->points = init_empty_int_matrix(STARTING_CELL_SIZE);
@@ -22,9 +19,6 @@ Cell* init_cell(IntArray* center) {
 }
 
 Cells* init_cells(IntMatrix* centers) {
-  /**
-   * Inits an array of Cells from the given list of IntMatrices
-   */
   Cells* cells = malloc(sizeof(Cells) * 1);
   cells->cells = malloc(centers->height * sizeof(Cell*));
   cells->size = centers->height;
@@ -60,9 +54,6 @@ int* compute_chunk_byte_sizes(int* idxs, int cnt, int arr_len, int dims) {
 }
 
 IntMatrix* compute_centers(Cells* cells, int process_cnt) {
-  /**
-   * Computes a center point for each given Cell
-   */
   IntMatrix* centers = init_empty_int_matrix(cells->size);
   if (process_cnt == 1) {
     for (int i = 0; i < cells->size; i++)
@@ -71,7 +62,7 @@ IntMatrix* compute_centers(Cells* cells, int process_cnt) {
   }
 
   int* chunks_idxs = split_array(cells->size, process_cnt);
-  int** child_pipes = init_child_pipes(process_cnt);
+  int** child_pipes = init_pipes(process_cnt);
   int dims = cells->cells[0]->center->size;
   int* chunk_byte_sizes = compute_chunk_byte_sizes(chunks_idxs, process_cnt, cells->size, dims);
   pid_t children[process_cnt];
@@ -126,7 +117,7 @@ IntMatrix* compute_centers(Cells* cells, int process_cnt) {
     }
   }
 
-  free_child_pipes(child_pipes, process_cnt);
+  pipes(child_pipes, process_cnt);
   for (int i = 0; i < process_cnt; i++)
     free(raw_centers[i]);
   free(raw_centers);
@@ -137,11 +128,6 @@ IntMatrix* compute_centers(Cells* cells, int process_cnt) {
 }
 
 void print_cell(Cell* cell, FILE* output_file) {
-  /**
-   * Writes the given Cell to the given FILE stream in the following manner
-   *
-   * center | a1,a2,a3 b1,b2,b3 ...
-   */
   write_int_arr(cell->center, output_file);
   fprintf(output_file, " | ");
   write_int_matrix(cell->points, output_file);
@@ -149,27 +135,17 @@ void print_cell(Cell* cell, FILE* output_file) {
 }
 
 void print_cells(Cells* cells, FILE* output_file) {
-  /**
-   * Prints the given Cells to the given FILE stream
-   */
   for (int i = 0; i < cells->size; i++)
     print_cell(cells->cells[i], output_file);
   fputc('\n', output_file);
 }
 
 void free_cell(Cell* cell) {
-  /**
-   * Free the given Cell and its underlying IntMatrix, but not the center point or the points underlying the IntMatrix
-   */
   free_int_matrix_no_data(cell->points);
   free(cell);
 }
 
 void free_cells(Cells* cells) {
-  /**
-   * Frees the given array of Cells, but not the underlying IntArrays. Assumes the latter are freed by other data
-   * structures.
-   */
   for (int i = 0; i < cells->size; i++)
     free_cell(cells->cells[i]);
   free(cells->cells);

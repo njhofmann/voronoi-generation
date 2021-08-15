@@ -7,7 +7,7 @@
 #define VORONOI_GENERATION__DISTANCE_METRIC_H_
 
 /**
- * Available distance metrics
+ * Supported distance metrics
  */
 typedef enum {
   EUCLIDEAN = 0,
@@ -22,7 +22,16 @@ typedef enum {
   YANG = 9,
 } DistanceMetric;
 
+
+/**
+ * Returns the distance metric corresponding to the given string, throws an error if invalid string
+ */
 DistanceMetric parse_distance_metric(char* raw_arg);
+
+/**
+ * Computes the distance between two given IntArrays using the given distance metric, assumes arrays are of the same
+ * length
+ */
 double compute_distance_metric(IntArray* a, IntArray* b, DistanceMetric metric, int p);
 
 #endif //VORONOI_GENERATION__DISTANCE_METRIC_H_

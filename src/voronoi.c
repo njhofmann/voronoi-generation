@@ -56,7 +56,7 @@ int* get_chunk_byte_sizes(int* idxs, int cnt, int arr_len) {
 
 Cells* create_voronoi_diagram(IntMatrix* centers, IntMatrix* points, DistanceMetric metric, int p, int process_cnt) {
   int* chunks_idxs = split_array(points->height, process_cnt);
-  int** child_pipes = init_child_pipes(process_cnt);
+  int** child_pipes = init_pipes(process_cnt);
   int* chunk_byte_sizes = get_chunk_byte_sizes(chunks_idxs, process_cnt, points->height);
   pid_t children[process_cnt];
   for (int i = 0; i < process_cnt; i++) {
@@ -101,7 +101,7 @@ Cells* create_voronoi_diagram(IntMatrix* centers, IntMatrix* points, DistanceMet
     }
   }
 
-  free_child_pipes(child_pipes, process_cnt);
+  pipes(child_pipes, process_cnt);
   for (int i = 0; i < process_cnt; i++)
     free(all_assigned_centers[i]);
   free(all_assigned_centers);
@@ -199,19 +199,6 @@ void write_all_centers(IntTensor* all_centers, char* output_dirc) {
 void voronoi_relaxation(IntArray* dimensions, IntMatrix* points, IntMatrix* centers, DistanceMetric metric,
                         int iterations, double converge_threshold, char* output_dirc, bool full_output,
                         int process_cnt, int p) {
-  /**
-   * Executes iterations of Voronoi relaxation from the given set of starting points and centers, using the given
-   * DistanceMetric
-   *
-   * Results are writen to the given FILE stream, if `full_output` is true each iteration is writen
-   *
-   * If `iterations` is positive, computes that many iterations of relaxation
-   *
-   * If `converge_threshold` is positive, executes iterations until the center of some cluster moves <
-   * `converge_theshold` between iterations
-   *
-   * If `iterations` and `converge_threshold` used, stops on the first one to be met
-   */
   // holds each points assigned cell during each iteration
   IntMatrix* point_centers = init_int_matrix(10, points->height);
 

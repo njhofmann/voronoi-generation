@@ -16,7 +16,6 @@ typedef struct {
   int total_length; // total # of IntMatrices
 } IntTensor;
 
-
 IntTensor* init_int_tensor(IntMatrix* matrix, int length);
 IntTensor* add_matrix_to_int_tensor(IntTensor* tensor, IntMatrix* matrix);
 void free_int_tensor(IntTensor* tensor);

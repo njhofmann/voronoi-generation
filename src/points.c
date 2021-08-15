@@ -41,11 +41,6 @@ void valid_centers(IntMatrix* box, IntMatrix* centers) {
 }
 
 IntMatrix* get_points_in_bounding_box(IntMatrix* box) {
-  /**
-   * Returns an IntMatrix of all the points in the given bounding box
-   *
-   * Ex: if bounding box if from (0,0) to (10, 10) - returns (0, 0), (0, 1), ..., (9, 8), (9, 9)
-   */
   if (box->height != 2) {
     fprintf(stderr, "bounding box must have exact two points\n");
     exit(EXIT_FAILURE);
