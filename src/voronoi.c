@@ -70,9 +70,16 @@ bool convergence_threshold_met(double converge_threshold, IntMatrix* old_centers
   return false;
 }
 
+/**
+ * When mapping the given point and all other points in the given dimensions to a 1D array, returns the position of that
+ * array
+ */
 int get_point_idx(IntArray* point, IntArray* dims) {
-  // TODO generalize this to n-d
-  return (dims->items[1] * point->items[0]) + point->items[1];
+  // no clue why this works :)
+  int t = 0;
+  for (int i = 0; i < point->size-1; i++)
+    t += point->items[i] * dims->items[i+1];
+  return t + point->items[point->size-1];
 }
 
 IntMatrix* record_point_assigns(IntArray* dims, IntMatrix* point_groups, Cells* cells) {

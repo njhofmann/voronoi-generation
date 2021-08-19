@@ -24,7 +24,7 @@
 
 1. to do
     1. 3d display
-    2. 0 as default boundary point
+    2. random centers
     3. n-d point generalization
     4. valgrind warnings
     5. point-by-point vs generation all points at once?
@@ -37,7 +37,6 @@
     8. docs
     9. read me
     10. random centers
-    11. multi processing & multi threading
     12. when does it fail?
     13. valid centers chec
     14. redo matrix width
