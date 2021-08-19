@@ -54,12 +54,6 @@ void free_int_matrix(IntMatrix* matrix);
 void free_int_matrix_no_data(IntMatrix* matrix);
 
 /**
- * Concatenates all IntMatrixs in the given array to the first IntMatrix, freeing the array and all copied IntMatrixs
- * (but keeping their inner IntArrays intact). Assumes all IntMatrixs have the same width.
- */
-IntMatrix* concat_int_matrices(IntMatrix** matrices, int size);
-
-/**
  * Prints each row of an IntMatrix to stdout, for debugging
  */
 void print_int_matrix(IntMatrix* matrix);

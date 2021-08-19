@@ -6,15 +6,6 @@
 #include <stdlib.h>
 #include "points.h"
 
-IntMatrix* add_bounds_to_int_array(IntArray* arr, int end) {
-  IntMatrix* expanded = init_int_matrix_from_int_arr(arr, end); // inclusive: [start, end]
-  for (int i = 0; i < end; i++)
-    add_to_int_arr(expanded->matrix[i], i);
-  // TODO double check matrix bounds here?
-  expanded->width = expanded->matrix[0]->size;
-  return expanded;
-}
-
 void valid_centers(IntArray* box, IntMatrix* centers) {
   for (int i = 0; i < centers->height; i++) {
     IntArray* cur_center = centers->matrix[i];
@@ -29,25 +20,41 @@ void valid_centers(IntArray* box, IntMatrix* centers) {
   }
 }
 
+IntArray* increment_counter(IntArray* counter, IntArray* box) {
+  int last_idx = counter->size-1;
+  bool inc_next_dim = false;
+  for (int i = last_idx; i >= 0; i--) {
+    int cur_dim_cnt = counter->items[i];
+    if (i == last_idx || inc_next_dim)
+      cur_dim_cnt += 1;
+
+    if (cur_dim_cnt == box->items[i]) {
+      cur_dim_cnt = 0;
+      inc_next_dim = true;
+    }
+
+    counter->items[i] = cur_dim_cnt;
+
+    if (!inc_next_dim)
+      break;
+  }
+  return counter;
+}
+
 IntMatrix* get_points_in_bounding_box(IntArray* box) {
-  IntArray* upper_right = box;
-  int first_dim_size = upper_right->items[0];
-  IntMatrix* points = init_int_matrix(box->size, first_dim_size);
+  int num_of_points = 1;
+  for (int i = 0; i < box->size; i++)
+    num_of_points = num_of_points * box->items[i];
 
-  // assign each item in first dimension (inclusive) to first index of each array in order of appearance
-  for (int i = 0; i < first_dim_size; i++)
-    add_to_int_arr(points->matrix[i], i);
+  IntArray* counter = init_int_array(box->size);
+  counter->size = box->size;
+  IntMatrix* points = init_int_matrix_from_int_arr(counter, num_of_points);
 
-  // start in second dimension
-  // for each dimension, add entire range of that dimension to each item in the existing array of points
-  for (int dim = 1; dim < box->size; dim++) {
-    int matrix_count = points->height;
-    IntMatrix* temps[matrix_count];// = malloc(sizeof(IntMatrix*) * matrix_count);
-    for (int i = 0; i < points->height; i++)
-      temps[i] = add_bounds_to_int_array(points->matrix[i], upper_right->items[dim]);
-    free_int_matrix(points);
-    points = concat_int_matrices(temps, matrix_count);
+  for (int i = 1; i < num_of_points; i++) {
+    counter = increment_counter(counter, box);
+    copy_int_arr(counter, points->matrix[i]);
   }
 
+  free_int_array(counter);
   return points;
 }

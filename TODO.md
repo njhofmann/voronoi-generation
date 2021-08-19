@@ -25,9 +25,7 @@
 1. to do
     1. 3d display
     2. random centers
-    3. n-d point generalization
     4. valgrind warnings
-    5. point-by-point vs generation all points at once?
     6. where does multiprocessing actually help? do some time trials
        1. i = 1, 5, 10, 20
        2. m = 1, 2, 4, 8?

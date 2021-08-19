@@ -16,8 +16,6 @@ IntMatrix* get_points_in_bounding_box(IntArray* box);
 
 /**
  * Returns if the given set of centers are within the given bounding box
- * @param box
- * @param centers
  */
 void valid_centers(IntArray* box, IntMatrix* centers);
 

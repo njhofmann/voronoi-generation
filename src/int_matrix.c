@@ -94,6 +94,7 @@ IntMatrix* init_int_matrix_from_int_arr(IntArray* arr, int height) {
   IntMatrix* matrix = init_int_matrix(arr->size, height); // TODO total size vs size?
   for (int i = 0; i < height; i++)
     copy_int_arr(arr, matrix->matrix[i]);
+  matrix->width = arr->size;
   return matrix;
 }
 
@@ -109,39 +110,6 @@ IntMatrix* init_empty_int_matrix(int height) {
   matrix->height = 0;
   matrix->matrix = malloc(sizeof(IntArray*) * height);
   return matrix;
-}
-
-IntMatrix* concat_int_matrices(IntMatrix** matrices, int size) {
-  if (size < 1) {
-    fprintf(stderr, "array of IntMatrixs must have one IntMatrix");
-    exit(EXIT_FAILURE);
-  }
-
-  // get total size of new matrix
-  int new_total_size = 0;
-  for (int i = 0; i < size; i++)
-    new_total_size += matrices[i]->height;
-
-  // create new empty matrix to fit all matrices, copy over 1st matrix, free original matrix (minus data)
-  IntMatrix* final = matrices[0];
-  IntArray** new_inner_matrix = malloc(sizeof(IntArray*) * new_total_size);
-  memcpy(new_inner_matrix, final->matrix, sizeof(IntArray*) * final->height);
-  int copy_start_idx = final->height;
-  free(final->matrix);
-  final->matrix = new_inner_matrix;
-  final->height = new_total_size;
-
-  // copy over each matrix after the first
-  for (int i = 1; i < size; i++) {
-    IntMatrix* cur_matrix = matrices[i];
-    // pointer arithmetic to find location that was last left
-    memcpy(final->matrix + copy_start_idx, cur_matrix->matrix, sizeof(IntArray*) * cur_matrix->height);
-    copy_start_idx += cur_matrix->height;
-    free(cur_matrix->matrix);
-    free(cur_matrix);
-  }
-
-  return final;
 }
 
 void write_int_matrix(IntMatrix* matrix, FILE* output_file) {
