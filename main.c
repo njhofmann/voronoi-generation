@@ -67,7 +67,7 @@ int main(int argc, char* argv[]) {
   int p = 2;
   int num_of_processes = 1;
   IntMatrix* starting_centers;
-  IntMatrix* bounding_box;
+  IntArray* bounding_box;
 
   // short options - : means required, :: means optional
   char cur_arg;
@@ -83,7 +83,7 @@ int main(int argc, char* argv[]) {
         break;
       case 'b':
         found_option(2, "boundary");
-        bounding_box = parse_boundary(optind-1, argc, argv);
+        bounding_box = parse_point(argv[optind-1]);
         break;
       case 'i':
         found_option(3, "iterations");
@@ -140,7 +140,7 @@ int main(int argc, char* argv[]) {
     exit(EXIT_FAILURE);
   }
 
-  if (bounding_box->width != starting_centers->width) {
+  if (bounding_box->size != starting_centers->width) {
     fprintf(stderr, "number of axes in boundary box does equal number of axes in starting center");
     exit(EXIT_FAILURE);
   }
@@ -148,11 +148,9 @@ int main(int argc, char* argv[]) {
   valid_centers(bounding_box, starting_centers);
 
   IntMatrix* points = get_points_in_bounding_box(bounding_box);
-  IntArray* dims = get_bounding_box_dims(bounding_box);
-  voronoi_relaxation(dims, points, starting_centers, distance_metric, iterations, convergence, output_dirc, full_output,
+  voronoi_relaxation(bounding_box, points, starting_centers, distance_metric, iterations, convergence, output_dirc, full_output,
                      num_of_processes, p);
 
-  free_int_array(dims);
-  free_int_matrix(bounding_box);
+  free_int_array(bounding_box);
   return EXIT_SUCCESS;
 }

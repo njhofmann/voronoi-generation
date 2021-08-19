@@ -21,7 +21,7 @@ The executable accepts the following arguments in any order:
 
 - `--centers [-c] {required}`: starting center points, either listed in the command line spaced our or in a file line by line (ex: `examples/centers.txt`), each point in form of `x_1,x_2,...,x_i`
 
-- `--box [-b] {required}`: bounding box of the Voronoi diagram in the form of two points (ex: `0,0 10,10`, `3,4,6 10,45,100`)
+- `--box [-b] {required}`: bounding box of the Voronoi diagram in the form of an upper right point (ex: `10,10`, `10,45,100`)
 
 - `--iterations [-i] {optional}`: number of iterations of relaxation to do, if used with `convergence` - 
 

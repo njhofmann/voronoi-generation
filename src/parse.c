@@ -119,39 +119,3 @@ IntMatrix* parse_starting_centers(int start_idx, int argc, char* argv[]) {
     centers[i] = parse_point(argv[i + start_idx]);
   return init_int_matrix_from_int_arrs(centers, arr_count);
 }
-
-void valid_boundary(IntArray* lower_left, IntArray* upper_right) {
-  if (lower_left->size != upper_right->size) {
-    fprintf(stderr, "lower left point and upper right point must have same number of axes");
-    exit(EXIT_FAILURE);
-  }
-
-  for (int i = 0; i < lower_left->size; i++)
-    if (lower_left->items[i] >= upper_right->items[i]) {
-      fprintf(stderr, "%dth coodinate in lower left point is greater than upper right points", i);
-      exit(EXIT_FAILURE);
-    }
-}
-
-IntMatrix* parse_boundary(int start_idx, int argc, char* argv[]) {
-  int end_idx = find_next_arg_idx(start_idx, argc, argv);
-  if (end_idx - start_idx != 2) {
-    fprintf(stderr, "expect 2 args for bounding box - lower left and upper right points");
-    exit(EXIT_FAILURE);
-  }
-
-  IntArray* lower_left = parse_point(argv[start_idx]);
-  IntArray* upper_right = parse_point(argv[start_idx + 1]);
-  valid_boundary(lower_left, upper_right);
-
-  // free original int arrays, add our own
-  // TODO make this a method?
-  IntMatrix* boundary = init_int_matrix(lower_left->size, 2);
-  free_int_array(boundary->matrix[0]);
-  free_int_array(boundary->matrix[1]);
-  boundary->matrix[0] = lower_left;
-  boundary->matrix[1] = upper_right;
-  boundary->width = lower_left->size;  // TODO fix how matrix size works
-
-  return boundary;
-}

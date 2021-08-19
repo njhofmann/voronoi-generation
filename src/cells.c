@@ -77,10 +77,13 @@ IntMatrix* compute_centers(Cells* cells, int process_cnt) {
         IntArray* center = compute_center(cells->cells[j]);
         for (int k = 0; k < center->size; k++) {
           child_centers[idx] = center->items[k];
+          idx++;
         }
+        free_int_array(center);
       }
       exact_write(child_pipes[i][1], child_centers, chunk_byte_sizes[i]);
       close(child_pipes[i][1]);
+      free(child_centers);
       exit(0);
     }
     else if (children[i] < 0) { // child < 0
@@ -110,20 +113,20 @@ IntMatrix* compute_centers(Cells* cells, int process_cnt) {
     int m = 0;
     for (int j = 0; j < cur_chunk_size; j++) {
       IntArray* cur_center = init_int_array(dims);
-      for (int k = 0; k < dims; k++)
+      for (int k = 0; k < dims; k++) {
         add_to_int_arr(cur_center, raw_centers[i][m]);
+        m++;
+      }
       add_int_matrix(centers, cur_center);
-      m++;
     }
   }
 
-  pipes(child_pipes, process_cnt);
+  free_pipes(child_pipes, process_cnt);
   for (int i = 0; i < process_cnt; i++)
     free(raw_centers[i]);
   free(raw_centers);
   free(chunk_byte_sizes);
   free(chunks_idxs);
-
   return centers;
 }
 

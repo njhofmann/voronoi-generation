@@ -23,20 +23,27 @@
             1. output only final diagram, or each intermediate diagram
 
 1. to do
-    1. errono for error handling
     1. 3d display
-    1. point assignment to array   
-    1. help option
-    1. docs
-    1. read me
-    1. random centers
-    1. multi processing & multi threading
-    1. when does it fail?
-    1. valid centers chec
-    1. redo matrix width
-        1. make rows point to null, only append
-        1. tension between int arrays that are being resized and int matrix
-        1. how to create a new empty int matrix with a "width" if width relies on int arrays
+    2. 0 as default boundary point
+    3. n-d point generalization
+    4. valgrind warnings
+    5. point-by-point vs generation all points at once?
+    6. where does multiprocessing actually help? do some time trials
+       1. i = 1, 5, 10, 20
+       2. m = 1, 2, 4, 8?
+       3. \# of points = 100,100 to 1000,1000 (log)
+       4. \# of centers = 2, 5, 10, 15, 20, 25
+    7. help option
+    8. docs
+    9. read me
+    10. random centers
+    11. multi processing & multi threading
+    12. when does it fail?
+    13. valid centers chec
+    14. redo matrix width
+         1. make rows point to null, only append
+         1. tension between int arrays that are being resized and int matrix
+         1. how to create a new empty int matrix with a "width" if width relies on int arrays
 
 1. misc
     1. higher order voronoi diagrams

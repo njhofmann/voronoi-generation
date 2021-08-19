@@ -60,10 +60,10 @@ IntMatrix* init_int_matrix_from_int_arrs(IntArray** arrs, int count) {
   return matrix;
 }
 
+/**
+ * Add more unallocated space to the given IntMatrix
+ */
 IntMatrix* expand_int_matrix(IntMatrix* matrix) {
-  /**
-   * Add more unallocated space to the given IntMatrix
-   */
   int new_total_height = ceil(matrix->total_height * RESIZE_FACTOR);
   IntArray** new_matrix = malloc(sizeof(IntArray*) * new_total_height);
   memcpy(new_matrix, matrix->matrix, sizeof(IntArray*) * matrix->height);

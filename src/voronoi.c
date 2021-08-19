@@ -14,11 +14,11 @@
 #include "util.h"
 #include "pipes.h"
 
+/**
+ * Finds the index of the center that is closest to the given point via the given distance metric. Assumes the point
+ * and centers are of the same dimensionality
+ */
 int closest_center(IntArray* point, IntMatrix* centers, DistanceMetric distance_metric, int p) {
-  /**
-   * Finds the index of the center that is closest to the given point via the given distance metric. Assumes the point
-   * and centers are of the same dimensionality
-   */
   int closest_idx = -1;
   double closest_dist = 0.0;
   for (int i = 0; i < centers->height; i++) {
@@ -34,79 +34,13 @@ int closest_center(IntArray* point, IntMatrix* centers, DistanceMetric distance_
   return closest_idx;
 }
 
-int* assign_points(IntMatrix* centers, IntMatrix* points, int start_idx, int end_idx, DistanceMetric metric, int p) {
-  int length = end_idx - start_idx;
-  int* assigned_centers = malloc(sizeof(int) * length);
-  for (int i = 0; i < length; i++) {
-    IntArray* cur_point = points->matrix[start_idx + i];
-    int closest_center_idx = closest_center(cur_point, centers, metric, p);
-    assigned_centers[i] = closest_center_idx;
-  }
-  return assigned_centers;
-}
-
-int* get_chunk_byte_sizes(int* idxs, int cnt, int arr_len) {
-  int* sizes = malloc(sizeof(int) * cnt);
-  for (int i = 0; i < cnt; i++) {
-    int next_idx = (i == cnt - 1) ? arr_len : idxs[i + 1];
-    sizes[i] = sizeof(int) * (next_idx - idxs[i]);
-  }
-  return sizes;
-}
-
 Cells* create_voronoi_diagram(IntMatrix* centers, IntMatrix* points, DistanceMetric metric, int p, int process_cnt) {
-  int* chunks_idxs = split_array(points->height, process_cnt);
-  int** child_pipes = init_pipes(process_cnt);
-  int* chunk_byte_sizes = get_chunk_byte_sizes(chunks_idxs, process_cnt, points->height);
-  pid_t children[process_cnt];
-  for (int i = 0; i < process_cnt; i++) {
-    if ((children[i] = fork()) == 0) {
-      close_all_other_pipes(child_pipes, process_cnt, i);
-
-      int end_idx = (i == process_cnt - 1) ? points->height : chunks_idxs[i + 1];
-      int* assigned_centers = assign_points(centers, points, chunks_idxs[i], end_idx, metric, p);
-      exact_write(child_pipes[i][1], assigned_centers, chunk_byte_sizes[i]);
-      close(child_pipes[i][1]);
-      exit(0);
-    }
-    else if (children[i] < 0) { // child < 0
-      fprintf(stderr, "failed to create child processes");
-      exit(1);
-    }
-  }
-
-  int status;
-  for (int i = 0; i < process_cnt; i++) {
-    waitpid(children[i], &status, 0);
-  }
-
-  // merge cells
-  int** all_assigned_centers = malloc(sizeof(int*) * process_cnt);
-  for (int i = 0; i < process_cnt; i++) {
-    close(child_pipes[i][1]); // close write end
-    all_assigned_centers[i] = malloc(chunk_byte_sizes[i]);
-    exact_read(child_pipes[i][0], all_assigned_centers[i], chunk_byte_sizes[i]);
-    close(child_pipes[i][0]); // close read end
-  }
-
   Cells* cells = init_cells(centers);
-  int k = 0;
-  for (int i = 0; i < process_cnt; i++) {
-    int end_idx = (i == process_cnt - 1) ? points->height : chunks_idxs[i + 1];
-    int cur_chunk_size = end_idx - chunks_idxs[i];
-    for (int j = 0; j < cur_chunk_size; j++) {
-      int cur_center_idx = all_assigned_centers[i][j];
-      add_int_matrix(cells->cells[cur_center_idx]->points, points->matrix[k]);
-      k++;
-    }
+  for (int i = 0; i < points->height; i++) {
+    IntArray* cur_point = points->matrix[i];
+    int closest_center_idx = closest_center(cur_point, centers, metric, p);
+    add_int_matrix(cells->cells[closest_center_idx]->points, cur_point);
   }
-
-  pipes(child_pipes, process_cnt);
-  for (int i = 0; i < process_cnt; i++)
-    free(all_assigned_centers[i]);
-  free(all_assigned_centers);
-  free(chunk_byte_sizes);
-  free(chunks_idxs);
 
   // edge case: when duplicate centers and only the first instance has points added, add center to itself so there is
   // at least one point to process
@@ -123,11 +57,11 @@ double center_dist(IntArray* a, IntArray* b) {
   return compute_distance_metric(a, b, EUCLIDEAN, 2);
 }
 
+/**
+ * Returns if the given convergence threshold has been met - i.e. is there a pair of index matching centers (i-th
+ * center in each group) that has moved < `converge_threshold`
+ */
 bool convergence_threshold_met(double converge_threshold, IntMatrix* old_centers, IntMatrix* new_centers) {
-  /**
-   * Returns if the given convergence threshold has been met - i.e. is there a pair of index matching centers (i-th
-   * center in each group) that has moved < `converge_threshold`
-   */
   if (converge_threshold < 0.0)
     return false;
   for (int i = 0; i < old_centers->height; i++)
