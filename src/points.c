@@ -42,19 +42,23 @@ IntArray* increment_counter(IntArray* counter, IntArray* box) {
 }
 
 IntMatrix* get_points_in_bounding_box(IntArray* box) {
-  int num_of_points = 1;
-  for (int i = 0; i < box->size; i++)
-    num_of_points = num_of_points * box->items[i];
-
+  int box_size = num_of_points(box);
   IntArray* counter = init_int_array(box->size);
   counter->size = box->size;
-  IntMatrix* points = init_int_matrix_from_int_arr(counter, num_of_points);
+  IntMatrix* points = init_int_matrix_from_int_arr(counter, box_size);
 
-  for (int i = 1; i < num_of_points; i++) {
+  for (int i = 1; i < box_size; i++) {
     counter = increment_counter(counter, box);
     copy_int_arr(counter, points->matrix[i]);
   }
 
   free_int_array(counter);
   return points;
+}
+
+int num_of_points(IntArray* box) {
+  int t = 1;
+  for (int i = 0; i < box->size; i++)
+    t *= box->items[i];
+  return t;
 }

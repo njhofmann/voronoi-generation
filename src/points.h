@@ -19,4 +19,9 @@ IntMatrix* get_points_in_bounding_box(IntArray* box);
  */
 void valid_centers(IntArray* box, IntMatrix* centers);
 
+/*
+ * Returns the number of points in the given bounding box
+ */
+int num_of_points(IntArray* box);
+
 #endif //VORONOI_GENERATION_SRC_POINTS_H_

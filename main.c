@@ -12,17 +12,17 @@
 
 static struct option LONG_OPTIONS[] = {
     // flag = NULL means val is used to id if arg is included
-    {"distance", required_argument, NULL, 'd'},
-    {"centers", required_argument, NULL, 'c'},
-    {"box", required_argument, NULL, 'b'},
-    {"iterations", required_argument, NULL, 'i'},
-    {"convergence", required_argument, NULL, 'v'},
-    {"output_dirc", required_argument, NULL, 'o'},
-    {"p", required_argument, NULL, 'p'},
-    {"full", no_argument, NULL, 'f'},
-    {"override", no_argument, NULL, 'r'},
-    {"processes", required_argument, NULL, 'm'},
-    {NULL, 0, NULL, 0}
+    {"distance",      required_argument, NULL, 'd'},
+    {"centers",       required_argument, NULL, 'c'},
+    {"box",           required_argument, NULL, 'b'},
+    {"iterations",    required_argument, NULL, 'i'},
+    {"convergence",   required_argument, NULL, 'v'},
+    {"output_dirc",   required_argument, NULL, 'o'},
+    {"p",             required_argument, NULL, 'p'},
+    {"full",          no_argument,       NULL, 'f'},
+    {"override",      no_argument,       NULL, 'r'},
+    {"processes",     required_argument, NULL, 'm'},
+    {NULL,     0,                NULL, 0}
 };
 
 static bool FOUND_OPTIONS[10] = {false, false, false, false, false, false, false, false, false, false};
@@ -33,22 +33,6 @@ void found_option(int idx, const char* name) {
     exit(EXIT_FAILURE);
   }
   FOUND_OPTIONS[idx] = true;
-}
-
-FILE* check_file_path(char* file_path, bool override) {
-  /**
-   * Throws and error if the file at the give file path exists, else returns a FILE* to that file
-   */
-  FILE* file;
-  // "x" forces error if file already exists
-  if (override) {
-    file = fopen(file_path, "w");
-  }
-  else if ((file = fopen(file_path, "wx")) == NULL) {
-    fprintf(stderr, "failed to open file at %s, file already exists\n", file_path);
-    exit(EXIT_FAILURE);
-  }
-  return file;
 }
 
 int main(int argc, char* argv[]) {
@@ -71,7 +55,7 @@ int main(int argc, char* argv[]) {
 
   // short options - : means required, :: means optional
   char cur_arg;
-  while ((cur_arg = getopt_long(argc, argv, "d:c:b:i:v:o:frp:c:m:", LONG_OPTIONS, NULL)) != -1) {
+  while ((cur_arg = (char)getopt_long(argc, argv, "d:c:b:i:v:o:frp:c:m:", LONG_OPTIONS, NULL)) != -1) {
     switch (cur_arg) {
       case 'd':
         found_option(0, "distance");
@@ -136,7 +120,7 @@ int main(int argc, char* argv[]) {
     create_dirc(output_dirc, override_results);
 
   if (convergence < 0 && iterations < 0) {
-    fprintf(stderr, "need at least a positive convergence threshold or positive number of iterations");
+    fprintf(stderr, "need a positive convergence threshold and / or positive number of iterations");
     exit(EXIT_FAILURE);
   }
 
@@ -144,6 +128,17 @@ int main(int argc, char* argv[]) {
     fprintf(stderr, "number of axes in boundary box does equal number of axes in starting center");
     exit(EXIT_FAILURE);
   }
+
+  int box_size = num_of_points(bounding_box);
+  if (box_size < starting_centers->height) {
+    fprintf(stderr, "%d points in bounding box and %d starting centers, former must be > than the latter",
+            box_size, starting_centers->height);
+    exit(EXIT_FAILURE);
+  }
+
+  // can't have empty processes
+  if (num_of_processes > starting_centers->height)
+    num_of_processes = starting_centers->height;
 
   valid_centers(bounding_box, starting_centers);
 

@@ -109,13 +109,17 @@ IntMatrix* read_starting_centers_file(char* path) {
 
 IntMatrix* parse_starting_centers(int start_idx, int argc, char* argv[]) {
   int end_idx = find_next_arg_idx(start_idx, argc, argv);
+  int arg_count = end_idx - start_idx;
 
-  if (end_idx - start_idx == 1)
+  if (arg_count == 0) {
+    fprintf(stderr, "need at least one center");
+    exit(EXIT_FAILURE);
+  }
+  else if (arg_count == 1)  // TODO random centers
     return read_starting_centers_file(argv[start_idx]);
 
-  int arr_count = end_idx - start_idx;
-  IntArray** centers = malloc(sizeof(IntArray*) * arr_count);
-  for (int i = 0; i < arr_count; i++)
+  IntArray** centers = malloc(sizeof(IntArray*) * arg_count);
+  for (int i = 0; i < arg_count; i++)
     centers[i] = parse_point(argv[i + start_idx]);
-  return init_int_matrix_from_int_arrs(centers, arr_count);
+  return init_int_matrix_from_int_arrs(centers, arg_count);
 }

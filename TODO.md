@@ -34,9 +34,7 @@
     7. help option
     8. docs
     9. read me
-    10. random centers
     12. when does it fail?
-    13. valid centers chec
     14. redo matrix width
          1. make rows point to null, only append
          1. tension between int arrays that are being resized and int matrix

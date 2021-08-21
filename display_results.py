@@ -46,11 +46,9 @@ def create_img(img_centers: np.ndarray, points, size) -> pi.Image:
 
 def display_voronoi(points: list[list[int]], point_centers: np.ndarray, real_centers: list[list[list[int]]],
                     colors: list[list[int]], save_path: str, process_cnt: int) -> None:
-    # TODo multiprocessing here
     size = tuple([x + 1 for x in points[-1]])
     if process_cnt == 1:
         imgs = []
-        # TODO multiprocessing here
         for i in range(len(point_centers[0])):
             img = pi.new('RGB', size)
             img_centers = point_centers[:, i]
@@ -71,7 +69,12 @@ def display_voronoi(points: list[list[int]], point_centers: np.ndarray, real_cen
 
 
 if __name__ == '__main__':
+    # TODO centers option, 3D display, point length check
     points, point_centers = load_point_groups(sys.argv[1])
+
+    if len(points[0]) not in (2, 3):
+        raise ValueError('only support the displaying of 2D & 3D points')
+
     all_centers = load_centers(sys.argv[2])
     colors = load_colors(sys.argv[3])
     save_path = sys.argv[4]
