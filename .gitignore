@@ -57,3 +57,5 @@ imgs
 results
 venv
 test
+random_centers/*.txt
+*/__pycache__/*

@@ -24,7 +24,6 @@ double manhattan_dist(IntArray* a, IntArray* b, int p) {
   return minkowski_dist(a, b, 1);
 }
 
-
 double chebyshev_dist(IntArray* a, IntArray* b, int p) {
   int max = 0;
   for (int i = 0; i < a->size; i++) {
@@ -71,7 +70,7 @@ double pearsons_dist(IntArray* a, IntArray* b, int p) {
   for (int i = 0; i < a->size; i++)
     sum += a->items[i] * b->items[i] * 1.0;
 
-  return 1 - ((sum  - (a->size * a_avg * b_avg)) / (a_dem * b_dem));
+  return 1 - ((sum - (a->size * a_avg * b_avg)) / (a_dem * b_dem));
 }
 
 double squared_sum(IntArray* a) {
@@ -125,13 +124,13 @@ double yang_dist(IntArray* a, IntArray* b, int p) {
     else
       x_greater += (x - y);
   }
-  return pow(pow(x_greater, p) + pow(x_lesser, p) , 1.0 / (1.0 * p));
+  return pow(pow(x_greater, p) + pow(x_lesser, p), 1.0 / (1.0 * p));
 }
 
 /**
  * Array of all distance metric methods
  */
-double (*dist_func[10])(IntArray*, IntArray*, int) = {
+double (* dist_func[10])(IntArray*, IntArray*, int) = {
     euclidean_dist,
     manhattan_dist,
     ramanujan_dist,

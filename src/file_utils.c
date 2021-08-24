@@ -12,18 +12,18 @@ void create_dirc(char* path, bool exists) {
   if (mkdir(path, S_IRWXU) == -1) {
     switch (errno) {
       case EACCES :
-        perror("the parent directory does not allow write");
+        perror("the parent directory does not allow write\n");
         exit(EXIT_FAILURE);
       case EEXIST:
         if (exists)
           break;
-        perror("pathname already exists");
+        perror("pathname already exists\n");
         exit(EXIT_FAILURE);
       case ENAMETOOLONG:
-        printf("pathname is too long");
+        printf("pathname is too long\n");
         exit(EXIT_FAILURE);
       default:
-        fprintf(stderr, "failed to make directory %s", path);
+        fprintf(stderr, "failed to make directory %s\n", path);
         exit(EXIT_FAILURE);
     }
   }

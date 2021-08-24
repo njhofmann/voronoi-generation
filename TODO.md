@@ -25,17 +25,19 @@
 1. to do
     1. 3d display
     2. random centers
-    4. valgrind warnings
-    6. where does multiprocessing actually help? do some time trials
-       1. i = 1, 5, 10, 20
-       2. m = 1, 2, 4, 8?
-       3. \# of points = 100,100 to 1000,1000 (log)
-       4. \# of centers = 2, 5, 10, 15, 20, 25
-    7. help option
-    8. docs
-    9. read me
-    12. when does it fail?
-    14. redo matrix width
+    3. random colors
+    4. k-nearest point Voronoi diagram
+    5. k-th order Voronoi diagram, points in cells share the nearest k centers
+    6. plot ideas:
+       1. run time vs num of points
+       2. runtime vs processes
+       3. num of centers runtime vs num of processes
+    7. valgrind warnings
+    8. help option
+    9. docs
+    10. read me
+    11. when does it fail?
+    12. redo matrix width
          1. make rows point to null, only append
          1. tension between int arrays that are being resized and int matrix
          1. how to create a new empty int matrix with a "width" if width relies on int arrays

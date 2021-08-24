@@ -107,7 +107,7 @@ IntMatrix* read_starting_centers_file(char* path) {
   return centers;
 }
 
-IntMatrix* parse_starting_centers(int start_idx, int argc, char* argv[]) {
+StartingCentersReturn* parse_starting_centers(int start_idx, int argc, char* argv[]) {
   int end_idx = find_next_arg_idx(start_idx, argc, argv);
   int arg_count = end_idx - start_idx;
 
@@ -115,11 +115,25 @@ IntMatrix* parse_starting_centers(int start_idx, int argc, char* argv[]) {
     fprintf(stderr, "need at least one center");
     exit(EXIT_FAILURE);
   }
-  else if (arg_count == 1)  // TODO random centers
-    return read_starting_centers_file(argv[start_idx]);
+
+  StartingCentersReturn* return_centers = malloc(sizeof(StartingCentersReturn));
+  return_centers->user_or_rand = true;
+  if (arg_count == 1) {
+    char* arg = argv[start_idx];
+    int count;
+    if ((count = (int)strtol(arg, NULL, 0)) != -1) {
+      // return_centers->centers = malloc(sizeof(int));
+      return_centers->centers.random_centers_count = count;
+      return_centers->user_or_rand = false;
+      return return_centers;
+    }
+    return_centers->centers.centers = read_starting_centers_file(arg);
+    return return_centers;
+  }
 
   IntArray** centers = malloc(sizeof(IntArray*) * arg_count);
   for (int i = 0; i < arg_count; i++)
     centers[i] = parse_point(argv[i + start_idx]);
-  return init_int_matrix_from_int_arrs(centers, arg_count);
+  return_centers->centers.centers = init_int_matrix_from_int_arrs(centers, arg_count);
+  return return_centers;
 }

@@ -62,3 +62,14 @@ int num_of_points(IntArray* box) {
     t *= box->items[i];
   return t;
 }
+
+IntMatrix* random_points(int count, IntArray* bounds) {
+  IntMatrix* points = init_int_matrix(bounds->size, count);
+  for (int i = 0; i < count; i+= 1) {
+    points->matrix[i]->size = bounds->size;
+    for (int j = 0; j < bounds->size; j++)
+      points->matrix[i]->items[j] = rand() % bounds->items[j];
+  }
+  points->width = bounds->size;
+  return points;
+}
