@@ -61,10 +61,7 @@ def display_voronoi(points: list[list[int]], point_centers: np.ndarray, real_cen
             imgs = p.starmap(func=create_img, iterable=[(x, points, size) for x in point_centers.T])
     else:
         raise ValueError('need positive number for # of processes')
-    # for point, centers in point_groups:
-    #     point = tuple(point)
-    #     for i, center in enumerate(centers):
-    #         imgs[i].putpixel(point, tuple(colors[center]))
+
     imgs[0].save(save_path, save_all=True, loop=0, append_images=imgs[1:], )
 
 

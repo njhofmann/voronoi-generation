@@ -152,7 +152,7 @@ int main(int argc, char* argv[]) {
   }
 
   if (k < 0) {
-    k += starting_centers-> width;
+    k += starting_centers->height;
   }
 
   // can't have empty processes

@@ -9,41 +9,9 @@
 #include "voronoi.h"
 #include "int_tensor.h"
 #include "wrapper_io.h"
-#include "quickselect.h"
+#include "closest_center.h"
 
 static const int STARTING_SIZE = 10;
-
-int find_k_th_closest_center(IntArray* point, IntMatrix* centers, DistanceMetric distance_metric, int p, int k) {
-  Dist dists[centers->height];
-  for (int i = 0; i < centers->height; i++) {
-    dists[i].dist = compute_distance_metric(point, centers->matrix[i], distance_metric, p);
-    dists[i].idx = i;
-  }
-  return quickselect(dists, centers->height, k);
-}
-
-/**
- * Finds the index of the `k`-th closest center to the given point via the given distance metric. Assumes the point
- * and centers are of the same dimensionality
- */
-int k_th_closest_center(IntArray* point, IntMatrix* centers, DistanceMetric distance_metric, int p, int k) {
-  if (k == 0) {
-    int closest_idx = -1;
-    double closest_dist = 0.0;
-    for (int i = 0; i < centers->height; i++) {
-      if (same_int_arr(point, centers->matrix[i]))
-        return i;
-
-      double cur_dist = compute_distance_metric(point, centers->matrix[i], distance_metric, p);
-      if (closest_idx < 0 || closest_dist > cur_dist) {
-        closest_idx = i;
-        closest_dist = cur_dist;
-      }
-    }
-    return closest_idx;
-  }
-  return find_k_th_closest_center(point, centers, distance_metric, p, k);
-}
 
 Cells* create_voronoi_diagram(IntMatrix* centers, IntMatrix* points, DistanceMetric metric, int p, int k) {
   Cells* cells = init_cells(centers);
@@ -88,9 +56,9 @@ bool convergence_threshold_met(double converge_threshold, IntMatrix* old_centers
 int get_point_idx(IntArray* point, IntArray* dims) {
   // no clue why this works :)
   int t = 0;
-  for (int i = 0; i < point->size-1; i++)
-    t += point->items[i] * dims->items[i+1];
-  return t + point->items[point->size-1];
+  for (int i = 0; i < point->size - 1; i++)
+    t += point->items[i] * dims->items[i + 1];
+  return t + point->items[point->size - 1];
 }
 
 IntMatrix* record_point_assigns(IntArray* dims, IntMatrix* point_groups, Cells* cells) {

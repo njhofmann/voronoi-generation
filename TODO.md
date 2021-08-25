@@ -23,21 +23,22 @@
             1. output only final diagram, or each intermediate diagram
 
 1. to do
-    1. 3d display
-    2. random colors
-    3. malloc vs local stack
-    4. k-nearest point Voronoi diagram
-    5. k-th order Voronoi diagram, points in cells share the nearest k centers
-    6. plot ideas:
+    1. update read me
+    2. 3d display
+    3. display_results args
+    4. random colors
+    5. malloc vs local stack
+    6. finish time trials, remove multiprocessing?
+    7. approximate diagrams?
+    8. k-th order Voronoi diagram, points in cells share the nearest k centers
+    9. plot ideas:
        1. run time vs num of points
        2. runtime vs processes
        3. num of centers runtime vs num of processes
-    7. valgrind warnings
-    8. help option
-    9. docs
-    10. read me
-    11. when does it fail?
-    12. redo matrix width
+    10. valgrind warnings
+    11. help option
+    12. when does it fail?
+    13. redo matrix width
          1. make rows point to null, only append
          1. tension between int arrays that are being resized and int matrix
          1. how to create a new empty int matrix with a "width" if width relies on int arrays
