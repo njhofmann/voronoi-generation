@@ -24,8 +24,8 @@
 
 1. to do
     1. 3d display
-    2. random centers
-    3. random colors
+    2. random colors
+    3. malloc vs local stack
     4. k-nearest point Voronoi diagram
     5. k-th order Voronoi diagram, points in cells share the nearest k centers
     6. plot ideas:

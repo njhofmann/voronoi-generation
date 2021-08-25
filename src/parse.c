@@ -11,12 +11,16 @@
 static const int STARTING_POINT_ARR_SIZE = 3;
 
 int parse_pos_num(char* raw_arg) {
-  int val = strtol(raw_arg, NULL, 10);
+  int val = (int)strtol(raw_arg, NULL, 10);
   if (val <= 0) {
     fprintf(stderr, "positive number must be > 0");
     exit(EXIT_FAILURE);
   }
   return val;
+}
+
+int parse_int(char* raw_arg) {
+  return (int)strtol(raw_arg, NULL, 10); // TODO error checking
 }
 
 int find_next_arg_idx(int start_idx, int argc, char* argv[]) {
@@ -121,8 +125,7 @@ StartingCentersReturn* parse_starting_centers(int start_idx, int argc, char* arg
   if (arg_count == 1) {
     char* arg = argv[start_idx];
     int count;
-    if ((count = (int)strtol(arg, NULL, 0)) != -1) {
-      // return_centers->centers = malloc(sizeof(int));
+    if ((count = (int)strtol(arg, NULL, 0)) != 0) {
       return_centers->centers.random_centers_count = count;
       return_centers->user_or_rand = false;
       return return_centers;

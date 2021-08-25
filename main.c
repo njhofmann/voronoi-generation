@@ -22,10 +22,11 @@ static struct option LONG_OPTIONS[] = {
     {"full", no_argument, NULL, 'f'},
     {"override", no_argument, NULL, 'r'},
     {"processes", required_argument, NULL, 'm'},
+    {"k-th-point", required_argument, NULL, 'k'},
     {NULL, 0, NULL, 0}
 };
 
-static bool FOUND_OPTIONS[10] = {false, false, false, false, false, false, false, false, false, false};
+static bool FOUND_OPTIONS[11] = {false, false, false, false, false, false, false, false, false, false, false};
 
 void found_option(int idx, const char* name) {
   if (FOUND_OPTIONS[idx]) {
@@ -49,13 +50,14 @@ int main(int argc, char* argv[]) {
   char* output_dirc = NULL;
   bool override_results = false;
   int p = 2;
+  int k = 0;
   int num_of_processes = 1;
   StartingCentersReturn* starting_centers_return;
   IntArray* bounding_box;
 
   // short options - : means required, :: means optional
   char cur_arg;
-  while ((cur_arg = (char) getopt_long(argc, argv, "d:c:b:i:v:o:frp:c:m:", LONG_OPTIONS, NULL)) != -1) {
+  while ((cur_arg = (char) getopt_long(argc, argv, "d:c:b:i:v:o:frp:c:m:k:", LONG_OPTIONS, NULL)) != -1) {
     switch (cur_arg) {
       case 'd':
         found_option(0, "distance");
@@ -97,6 +99,10 @@ int main(int argc, char* argv[]) {
         found_option(9, "multiple processes");
         num_of_processes = parse_pos_num(argv[optind - 1]);
         break;
+      case 'k':
+        found_option(10, "k-th point");
+        k = parse_int(argv[optind - 1]);
+        break;
       case '?':
         fprintf(stderr, "unknown arg or arg with a missing required param `-%c`\n", optopt);
         exit(EXIT_FAILURE);
@@ -128,7 +134,6 @@ int main(int argc, char* argv[]) {
       starting_centers_return->centers.centers :
       random_points(starting_centers_return->centers.random_centers_count, bounding_box);
 
-  print_int_matrix(starting_centers);
   if (bounding_box->size != starting_centers->width) {
     fprintf(stderr, "number of axes in boundary box does equal number of axes in starting center");
     exit(EXIT_FAILURE);
@@ -139,6 +144,15 @@ int main(int argc, char* argv[]) {
     fprintf(stderr, "%d points in bounding box and %d starting centers, former must be > than the latter",
             box_size, starting_centers->height);
     exit(EXIT_FAILURE);
+  }
+
+  if (k < (-1 * (starting_centers->width))) {
+    fprintf(stderr, "value of k %d is not in range [-%d, %d)", k, starting_centers->width, starting_centers->width);
+    exit(EXIT_FAILURE);
+  }
+
+  if (k < 0) {
+    k += starting_centers-> width;
   }
 
   // can't have empty processes
@@ -157,7 +171,8 @@ int main(int argc, char* argv[]) {
                      output_dirc,
                      full_output,
                      num_of_processes,
-                     p);
+                     p,
+                     k);
 
   free(starting_centers_return);
   free_int_array(bounding_box);

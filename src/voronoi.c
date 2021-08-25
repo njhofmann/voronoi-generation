@@ -9,34 +9,47 @@
 #include "voronoi.h"
 #include "int_tensor.h"
 #include "wrapper_io.h"
+#include "quickselect.h"
 
 static const int STARTING_SIZE = 10;
 
-/**
- * Finds the index of the center that is closest to the given point via the given distance metric. Assumes the point
- * and centers are of the same dimensionality
- */
-int closest_center(IntArray* point, IntMatrix* centers, DistanceMetric distance_metric, int p) {
-  int closest_idx = -1;
-  double closest_dist = 0.0;
+int find_k_th_closest_center(IntArray* point, IntMatrix* centers, DistanceMetric distance_metric, int p, int k) {
+  Dist dists[centers->height];
   for (int i = 0; i < centers->height; i++) {
-    if (same_int_arr(point, centers->matrix[i]))
-      return i;
-
-    double cur_dist = compute_distance_metric(point, centers->matrix[i], distance_metric, p);
-    if (closest_idx < 0 || closest_dist > cur_dist) {
-      closest_idx = i;
-      closest_dist = cur_dist;
-    }
+    dists[i].dist = compute_distance_metric(point, centers->matrix[i], distance_metric, p);
+    dists[i].idx = i;
   }
-  return closest_idx;
+  return quickselect(dists, centers->height, k);
 }
 
-Cells* create_voronoi_diagram(IntMatrix* centers, IntMatrix* points, DistanceMetric metric, int p) {
+/**
+ * Finds the index of the `k`-th closest center to the given point via the given distance metric. Assumes the point
+ * and centers are of the same dimensionality
+ */
+int k_th_closest_center(IntArray* point, IntMatrix* centers, DistanceMetric distance_metric, int p, int k) {
+  if (k == 0) {
+    int closest_idx = -1;
+    double closest_dist = 0.0;
+    for (int i = 0; i < centers->height; i++) {
+      if (same_int_arr(point, centers->matrix[i]))
+        return i;
+
+      double cur_dist = compute_distance_metric(point, centers->matrix[i], distance_metric, p);
+      if (closest_idx < 0 || closest_dist > cur_dist) {
+        closest_idx = i;
+        closest_dist = cur_dist;
+      }
+    }
+    return closest_idx;
+  }
+  return find_k_th_closest_center(point, centers, distance_metric, p, k);
+}
+
+Cells* create_voronoi_diagram(IntMatrix* centers, IntMatrix* points, DistanceMetric metric, int p, int k) {
   Cells* cells = init_cells(centers);
   for (int i = 0; i < points->height; i++) {
     IntArray* cur_point = points->matrix[i];
-    int closest_center_idx = closest_center(cur_point, centers, metric, p);
+    int closest_center_idx = k_th_closest_center(cur_point, centers, metric, p, k);
     add_int_matrix(cells->cells[closest_center_idx]->points, cur_point);
   }
 
@@ -137,7 +150,7 @@ void write_all_centers(IntTensor* all_centers, char* output_dirc) {
 
 void voronoi_relaxation(IntArray* dimensions, IntMatrix* points, IntMatrix* centers, DistanceMetric metric,
                         int iterations, double converge_threshold, char* output_dirc, bool full_output,
-                        int process_cnt, int p) {
+                        int process_cnt, int p, int k) {
   // holds each point's assigned cell during each iteration
   IntMatrix* point_centers = init_int_matrix(STARTING_SIZE, points->height);
 
@@ -148,7 +161,7 @@ void voronoi_relaxation(IntArray* dimensions, IntMatrix* points, IntMatrix* cent
   IntMatrix* new_centers;
   bool finished = false;
   while (!finished) {
-    Cells* voronoi_diagram = create_voronoi_diagram(centers, points, metric, p);
+    Cells* voronoi_diagram = create_voronoi_diagram(centers, points, metric, p, k);
     new_centers = compute_centers(voronoi_diagram, process_cnt);
 
     if (converge_threshold > 0)

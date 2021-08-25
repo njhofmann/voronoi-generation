@@ -71,5 +71,6 @@ IntMatrix* random_points(int count, IntArray* bounds) {
       points->matrix[i]->items[j] = rand() % bounds->items[j];
   }
   points->width = bounds->size;
+  points->height = count;
   return points;
 }

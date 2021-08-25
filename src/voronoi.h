@@ -24,6 +24,6 @@
  */
 void voronoi_relaxation(IntArray* dimensions, IntMatrix* points, IntMatrix* centers, DistanceMetric metric,
                         int iterations, double converge_threshold, char* output_dirc, bool full_output,
-                        int process_cnt, int p);
+                        int process_cnt, int p, int k);
 
 #endif //VORONOI_GENERATION__VORONOI_H_
