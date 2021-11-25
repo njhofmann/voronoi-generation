@@ -28,6 +28,7 @@ IntArray* increment_counter(IntArray* counter, IntArray* box) {
     if (i == last_idx || inc_next_dim)
       cur_dim_cnt += 1;
 
+    inc_next_dim = false;
     if (cur_dim_cnt == box->items[i]) {
       cur_dim_cnt = 0;
       inc_next_dim = true;

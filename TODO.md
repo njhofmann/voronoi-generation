@@ -24,17 +24,15 @@
 
 1. to do
     1. update read me
-    2. 3d display
+    2. plot ideas:
+        1. run time vs num of points
+        2. runtime vs processes
+        3. num of centers runtime vs num of processes
+        4. 3d display
     3. display_results args
     4. random colors
-    5. malloc vs local stack
     6. finish time trials, remove multiprocessing?
-    7. approximate diagrams?
     8. k-th order Voronoi diagram, points in cells share the nearest k centers
-    9. plot ideas:
-       1. run time vs num of points
-       2. runtime vs processes
-       3. num of centers runtime vs num of processes
     10. valgrind warnings
     11. help option
     12. when does it fail?

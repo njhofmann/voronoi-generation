@@ -113,12 +113,12 @@ int main(int argc, char* argv[]) {
   }
 
   if (!FOUND_OPTIONS[1]) {
-    fprintf(stderr, "require starting centers");
+    fprintf(stderr, "require starting centers\n");
     exit(EXIT_FAILURE);
   }
 
   if (!FOUND_OPTIONS[2]) {
-    fprintf(stderr, "require bounding box");
+    fprintf(stderr, "require bounding box\n");
     exit(EXIT_FAILURE);
   }
 
@@ -126,7 +126,7 @@ int main(int argc, char* argv[]) {
     create_dirc(output_dirc, override_results);
 
   if (convergence < 0 && iterations < 0) {
-    fprintf(stderr, "need a positive convergence threshold and / or positive number of iterations");
+    fprintf(stderr, "need a positive convergence threshold and / or positive number of iterations\n");
     exit(EXIT_FAILURE);
   }
 
@@ -135,13 +135,13 @@ int main(int argc, char* argv[]) {
       random_points(starting_centers_return->centers.random_centers_count, bounding_box);
 
   if (bounding_box->size != starting_centers->width) {
-    fprintf(stderr, "number of axes in boundary box does equal number of axes in starting center");
+    fprintf(stderr, "number of axes in boundary box does equal number of axes in starting center\n");
     exit(EXIT_FAILURE);
   }
 
   int box_size = num_of_points(bounding_box);
   if (box_size < starting_centers->height) {
-    fprintf(stderr, "%d points in bounding box and %d starting centers, former must be > than the latter",
+    fprintf(stderr, "%d points in bounding box and %d starting centers, former must be > than the latter\n",
             box_size, starting_centers->height);
     exit(EXIT_FAILURE);
   }

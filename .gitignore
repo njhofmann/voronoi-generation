@@ -59,3 +59,7 @@ venv
 test
 random_centers/*.txt
 */__pycache__/*
+Makefile
+CMakeCache.txt
+*.cmake
+CMakeFiles
