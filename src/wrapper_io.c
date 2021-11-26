@@ -27,8 +27,8 @@ void exact_write(int fd, const void* buf, size_t count) {
 void exact_read(int fd, void* buf, size_t count) {
   size_t r = read(fd, buf, count);
   if (r == -1) {
-    fprintf(stderr, "failed to read data");
-    fprintf(stderr, "errno set to %d", errno);
+    fprintf(stderr, "failed to read data\n");
+    fprintf(stderr, "errno set to %d\n", errno);
     exit(1);
   }
   else if (r != count) {

@@ -11,7 +11,7 @@ static const double INT_ARR_RESIZE_CONST = 1.4;
 
 IntArray* init_int_array(int size) {
   if (size < 1) {
-    fprintf(stderr, "int array must be of size 1");
+    fprintf(stderr, "int array must be of size 1\n");
     exit(EXIT_FAILURE);
   }
 
@@ -35,7 +35,8 @@ void print_int_arr(IntArray* arr) {
 
 void copy_int_arr(IntArray* src, IntArray* dest) {
   if (dest->total_size < src->size) {
-    fprintf(stderr,"dest array's total size %d less than source array size of %d", dest->total_size, src->size);
+    fprintf(stderr,"dest array's total size %d less than source array size of %d\n",
+            dest->total_size, src->size);
     exit(EXIT_FAILURE);
   }
   dest->size = src->size;

@@ -13,7 +13,7 @@ static const int STARTING_POINT_ARR_SIZE = 3;
 int parse_pos_num(char* raw_arg) {
   int val = (int)strtol(raw_arg, NULL, 10);
   if (val <= 0) {
-    fprintf(stderr, "positive number must be > 0");
+    fprintf(stderr, "positive number must be > 0\n");
     exit(EXIT_FAILURE);
   }
   return val;
@@ -43,7 +43,7 @@ IntArray* parse_point(char* raw_point) {
 IntMatrix* read_starting_centers_file(char* path) {
   FILE* file = fopen(path, "r");
   if (file == NULL) {
-    fprintf(stderr, "file %s doesn't exist", path);
+    fprintf(stderr, "file %s doesn't exist\n", path);
     exit(EXIT_FAILURE);
   }
 
@@ -57,7 +57,7 @@ IntMatrix* read_starting_centers_file(char* path) {
     some_input = true;
     if (cur_char == ',') {
       if (prev_char_int) {
-        fprintf(stderr, "two commas in a row in centers file");
+        fprintf(stderr, "two commas in a row in centers file\n");
         exit(EXIT_FAILURE);
       }
       arr_sz += 1;
@@ -73,7 +73,7 @@ IntMatrix* read_starting_centers_file(char* path) {
     arr_sz++;
 
   if (arr_sz == 0) {
-    fprintf(stderr, "no inputs on first line");
+    fprintf(stderr, "no inputs on first line\n");
     exit(EXIT_FAILURE);
   }
 
@@ -96,7 +96,7 @@ IntMatrix* read_starting_centers_file(char* path) {
     }
 
     if (idx != arr_sz || cur_center->size != arr_sz) {
-      fprintf(stderr, "expected %d points in centers file but got %d", arr_sz, idx);
+      fprintf(stderr, "expected %d points in centers file but got %d\n", arr_sz, idx);
       exit(EXIT_FAILURE);
     }
 
@@ -104,7 +104,7 @@ IntMatrix* read_starting_centers_file(char* path) {
   }
 
   if (fclose(file) != 0) {
-    fprintf(stderr, "failed to close file %s", path);
+    fprintf(stderr, "failed to close file %s\n", path);
     exit(EXIT_FAILURE);
   }
 
@@ -116,7 +116,7 @@ StartingCentersReturn* parse_starting_centers(int start_idx, int argc, char* arg
   int arg_count = end_idx - start_idx;
 
   if (arg_count == 0) {
-    fprintf(stderr, "need at least one center");
+    fprintf(stderr, "need at least one center\n");
     exit(EXIT_FAILURE);
   }
 

@@ -75,7 +75,7 @@ IntMatrix* expand_int_matrix(IntMatrix* matrix) {
 
 void add_int_matrix(IntMatrix* matrix, IntArray* arr) {
   if (matrix->width != UNSET_MATRIX_WIDTH && matrix->width != arr->size) {
-    fprintf(stderr, "inserted array's size %d must equal matrix width %d", arr->size, matrix->width);
+    fprintf(stderr, "inserted array's size %d must equal matrix width %d\n", arr->size, matrix->width);
     exit(EXIT_FAILURE);
   }
 

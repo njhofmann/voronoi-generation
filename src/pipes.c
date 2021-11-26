@@ -12,7 +12,7 @@ int** init_pipes(int cnt) {
   for (int i = 0; i < cnt; i++) {
     pipes[i] = malloc(sizeof(int) * 2);
     if (pipe(pipes[i]) == -1) {
-      fprintf(stderr, "failed to create child free_pipes");
+      fprintf(stderr, "failed to create child free_pipes\n");
       exit(EXIT_FAILURE);
     }
   }

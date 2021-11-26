@@ -107,7 +107,7 @@ int main(int argc, char* argv[]) {
         fprintf(stderr, "unknown arg or arg with a missing required param `-%c`\n", optopt);
         exit(EXIT_FAILURE);
       default:
-        fprintf(stderr, "error default case");
+        fprintf(stderr, "error default case\n");
         exit(EXIT_FAILURE);
     }
   }
@@ -147,13 +147,13 @@ int main(int argc, char* argv[]) {
   }
 
   if (k < (-1 * (starting_centers->width))) {
-    fprintf(stderr, "value of k %d is not in range [-%d, %d)", k, starting_centers->width, starting_centers->width);
+    fprintf(stderr, "value of k %d is not in range [-%d, %d)\n",
+            k, starting_centers->width, starting_centers->width);
     exit(EXIT_FAILURE);
   }
 
-  if (k < 0) {
+  if (k < 0)
     k += starting_centers->height;
-  }
 
   // can't have empty processes
   if (num_of_processes > starting_centers->height)

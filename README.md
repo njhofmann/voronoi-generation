@@ -7,9 +7,9 @@ Point-by-point, *n*-dimensional Voronoi diagram generation and relaxation in C.
 
 ## Background 
 
-This is small C program for [Voronoi diagram](https://en.wikipedia.org/wiki/Voronoi_diagram) and [relaxation](https://en.wikipedia.org/wiki/Lloyd%27s_algorithm) under a variety of distance functions.
+This is small C program for [Voronoi diagram](https://en.wikipedia.org/wiki/Voronoi_diagram) generation and [relaxation](https://en.wikipedia.org/wiki/Lloyd%27s_algorithm) under a variety of distance functions, generalized to *n*-dimensions.
 
-Instead of utilizing algorithms like [Fortune's algorithm](https://en.wikipedia.org/wiki/Fortune%27s_algorithm) that use geometric structures, this implementation opts for a point-by-point implementation - i.e. using points like (1, 1) and (2, 2) directly. The resulting algorithm is ~*n*^*k* in runtime, where n is the space within each dimension and k is the number of dimensions), but is vastly simpler in its implementation and output.
+Instead of utilizing algorithms like [Fortune's algorithm](https://en.wikipedia.org/wiki/Fortune%27s_algorithm) that use geometric structures, this implementation opts instead for a coordinate based implementation - i.e. using points like (1, 1) and (2, 2) directly. The resulting algorithm is slower (~*n*^*k* where *n* is the size of each dimension and *k* is the number of dimensions) and more of an approximation, but is vastly simpler in its implementation, output, and ability to generalize to higher dimensions.
 
 ## Usage
 
@@ -19,40 +19,29 @@ The executable accepts the following arguments in any order:
 
 - `--distance [-d] {optional, default: euclidian}`: distance metric to use; see available options under `Distance Functions`
 
-- `--centers [-c] {required}`: starting center points, either listed in the command line spaced our or in a file line by line (ex: `examples/centers.txt`), each point in form of `x_1,x_2,...,x_i`
+- `--centers [-c] {required}`: starting center points each in form of `x_1,x_2,...,x_i`, entered as:
+  - in the command line spaced out
+  - in a file line by line (ex: `examples/centers.txt`)
+  - a single digit to generate random starting centers
+    - dimensions are inferred from `--box`
 
 - `--box [-b] {required}`: bounding box of the Voronoi diagram in the form of an upper right point (ex: `10,10`, `10,45,100`)
 
 - `--iterations [-i] {optional}`: number of iterations of relaxation to do, if used with `convergence` - 
 
-- `--convergence [-v] {optional, default: 1}`: when the distance between two center is less than this, terminates
+- `--convergence [-v] {optional, default: 1}`: terminates when  the distance between any two centers is less than this
 
 - `--output [-o] {optional}`: directory to save outputs, by default prints to stdout
 
 - `--p [-p] {optional}`: additional parameter for Mirkowski and Yang distances, defaults to 2
 
-- `--full [-f] {optional}`: to save each iteration of relaxation, or just the final iteration
+- `--full [-f] {optional}`: if given saves each iteration of relaxation, else saves just the final iteration
 
 - `--override [-r] {optional}`: if file under `--output` already exists, override it
 
-- `--processes [-m] {optional}`: number of processes to create for multiprocessing, default sto 1
+- `--processes [-m] {optional, default: 1}`: number of processes to create for multiprocessing, doesn't add much benefit
 
-The results for each iteration are save in the following format:
-- each iteration is separated by a blank line
-- within each iteration, clusters / cells are on their own line
-- clusters / cells are in the format of "center point | [points in cluster]"
-
-for if *i* is the number of dimensions and *j* is the number of center points, the results for a single iteration may look like
-```
-c1_1,c1_2,...,c1_i | a1_1,a1_2,...,a2_i b2_1,b2_2,...,b1_i ...
-c1_1,c1_2,...,c1_i | a2_1,a2_2,...,a2_i b2_1,b2_2,...,b2_i ...
-...
-cj_1,cj_2,...,cj_i | aj_1,aj_2,...,aj_i bj_1,bj_2,...,bj_i ...
-```
-
-A small Python script under `display_results.py` is included to display the results that are in 2D. It takes in a results file and directory to save the resulting images. Requires Python 3.9 and Pillow.
-
-### Distance Function
+### Distance Functions
 
 Program supports the following distance functions, enter them into `--distance` as presented unless there are brackets next to it. Then enter the word in the brackets instead.
 
@@ -66,3 +55,22 @@ Program supports the following distance functions, enter them into `--distance` 
 - [bray-curtis](https://docs.scipy.org/doc/scipy/reference/generated/scipy.spatial.distance.braycurtis.html#scipy.spatial.distance.braycurtis) - not a proper distance metric because it doesn't obey the triangle inequality 
 - [minkowski](https://en.wikipedia.org/wiki/Minkowski_distance) -
 - [yang](https://www.ccs.neu.edu/home/radivojac/papers/yang_dataminknowldisc_2019.pdf) -
+
+### Output
+
+The results for each iteration are save in the following format:
+- each iteration is separated by a blank line in order
+- within each iteration, clusters / cells are on their own line
+- clusters / cells are in the format of `center_point | points_in_cluster`
+
+for if *i* is the number of dimensions and *j* is the number of center points, the results for a single iteration may look like
+```
+c1_1,c1_2,...,c1_i | a1_1,a1_2,...,a2_i b2_1,b2_2,...,b1_i ...
+c1_1,c1_2,...,c1_i | a2_1,a2_2,...,a2_i b2_1,b2_2,...,b2_i ...
+...
+cj_1,cj_2,...,cj_i | aj_1,aj_2,...,aj_i bj_1,bj_2,...,bj_i ...
+```
+
+### Visualization
+
+A small Python script `display_results.py` is included to visualize 2D and 3D results. It takes in a results file and directory to save the resulting images. Requires Python 3.9, Pillow 8.3.2, and Matplotlib 3.5.0.

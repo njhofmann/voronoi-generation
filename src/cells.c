@@ -87,8 +87,8 @@ IntMatrix* compute_centers(Cells* cells, int process_cnt) {
       exit(0);
     }
     else if (children[i] < 0) { // child < 0
-      fprintf(stderr, "failed to create child processes");
-      exit(1);
+      fprintf(stderr, "failed to create child processes\n");
+      exit(EXIT_FAILURE);
     }
   }
 

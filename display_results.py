@@ -1,13 +1,15 @@
-import PIL.Image as pi
-import pathlib as pl
-import sys
-import multiprocessing as mp
-import numpy as np
 import argparse as ap
-import random as r
-from typing import Optional, Union
 import enum as e
+import multiprocessing as mp
+import math as m
+import pathlib as pl
+import random as r
+from typing import Union
+
 import matplotlib.pyplot as plt
+import numpy as np
+import PIL.Image as pi
+import PIL.ImageDraw as id
 
 IMG_DIRC = pl.Path('imgs')
 
@@ -19,8 +21,8 @@ class ViewMode(e.Enum):
     @classmethod
     def str_to_mode(cls, string):
         for mode in cls:
-            if mode.name == string:
-                return mode.value
+            if mode.value == string:
+                return mode
         raise ValueError(f'string {string} is an invalid {str(cls)}')
 
 
@@ -66,50 +68,95 @@ def create_2d_voronoi_diagram(points: list[tuple[int, ...]],
                               point_groups: np.ndarray,
                               group_centers: list[list[tuple[int, ...]]],
                               colors: list[tuple[int, int, int]],
-                              mode: ViewMode,
-                              save_path: str,
-                              process_cnt: int) -> None:
-    size = tuple([x + 1 for x in points[-1]])
+                              process_cnt: int,
+                              size: tuple[int, int]) -> list[pi.Image]:
     if process_cnt == 1:
-        imgs = [create_img(point_groups[:, i], points, colors, size) for i in range(len(point_groups[0]))]
+        return [create_img(point_groups[:, i], points, colors, size) for i in range(len(point_groups[0]))]
     elif process_cnt > 1:
         with mp.Pool(processes=process_cnt) as p:
-            imgs = p.starmap(func=create_img, iterable=[(x, points, colors, size) for x in point_groups.T])
-    else:
-        raise ValueError('need positive number for # of processes')
+            return p.starmap(func=create_img, iterable=[(x, points, colors, size) for x in point_groups.T])
+    raise ValueError('need positive number for # of processes')
 
-    imgs[0].save(save_path, save_all=True, loop=0, append_images=imgs[1:], )
+
+def create_center_lines(centers, size) -> pi.Image:
+    img = pi.new('RGB', size, (255, 255, 255))
+    draw = id.Draw(img)
+    line_width = max([m.ceil(.01 * x) for x in size])
+    for group in centers:
+        # points = [tuple(x) for x in group]
+        #draw.point(xy=points, fill='red')  # TODO here
+        draw.line(list(map(tuple, group)), fill='black', width=line_width)
+    return img
+
+def create_2d_centers_over_time(centers: list[list[tuple[int, ...]]], size: tuple[int, int]) -> list[pi.Image]:
+    centers = np.array(centers)
+    n_iters, n_groups = centers.shape[:2]
+    centers = np.array([centers[:, i, :] for i in range(n_groups)])
+    return [create_center_lines(centers[:, :i, :], size) for i in range(1, n_iters)]
+
+def create_2d(points: list[tuple[int, ...]],
+              point_groups: np.ndarray,
+              group_centers: list[list[tuple[int, ...]]],
+              colors: list[tuple[int, int, int]],
+              mode: ViewMode,
+              save_path: str,
+              process_cnt: int) -> None:
+    size = tuple([x + 1 for x in points[-1]])
+    if mode == ViewMode.CELLS:
+        imgs = create_2d_voronoi_diagram(points, point_groups, group_centers, colors, process_cnt, size)
+    elif mode == ViewMode.CELLS_WITH_CENTERS:
+        pass
+    else:  # CENTERS
+        imgs = create_2d_centers_over_time(group_centers, size)
+
+    imgs[0].save(save_path, save_all=True, loop=0, append_images=imgs, format='GIF')
+
+
+def create_3d_centers_over_time(centers: list[list[tuple[int, ...]]], axes: plt.Axes) -> None:
+    centers = np.array(centers)
+    for i in range(len(centers[0])):
+        line = centers[:, i, :]
+        axes.plot(line[:, 0], line[:, 1], line[:, 2])
 
 
 def create_3d_voronoi_diagram(points: list[tuple[int, ...]],
                               point_groups: np.ndarray,
-                              group_centers: list[list[tuple[int, ...]]],
                               colors: list[tuple[int, int, int]],
-                              mode: ViewMode,
                               save_path: str,
-                              process_cnt: int) -> None:
-    # TODO 3D display
+                              axes: plt.Axes):
+    # only creates a graph for the last image
+    last_point = points[-1]
+
+    face_colors = np.zeros((*[x + 1 for x in last_point], 3), dtype=np.float32)
+    for i, point in enumerate(points):
+        face_colors[point] = colors[point_groups[:, -1][i]] #colors[]
+
+    filled = np.full(shape=[x + 1 for x in last_point], fill_value=True)  # every voxel is full
+
+    axes.voxels(filled=filled, facecolors=face_colors / 255)
+
+
+def create_3d(points: list[tuple[int, ...]],
+              point_groups: np.ndarray,
+              group_centers: list[list[tuple[int, ...]]],
+              colors: list[tuple[int, int, int]],
+              mode: ViewMode,
+              save_path: str,
+              process_cnt: int) -> None:
+    fig = plt.figure()
+    axes = fig.add_subplot(projection='3d')
+
     if mode == ViewMode.CELLS:
-        # only creates a graph for the last image
-        fig = plt.figure()
-        ax = fig.add_subplot(projection='3d')
-        last_point = points[-1]
-
-        face_colors = np.zeros((*[x + 1 for x in last_point], 3), dtype=np.float32)
-        for i, point in enumerate(points):
-            face_colors[point] = colors[point_groups[:, -1][i]] #colors[]
-
-        filled = np.full(shape=[x + 1 for x in last_point], fill_value=True)  # every voxel is full
-
-        ax.voxels(filled=filled, facecolors=face_colors / 255)
-        plt.grid(visible=False)
-        plt.axis('off')
-        fig.savefig(save_path)
+        create_3d_voronoi_diagram(points, point_groups, colors, save_path, axes)
     elif mode == ViewMode.CENTERS:
-        pass
+        create_3d_centers_over_time(group_centers, axes)
     else:
         raise ValueError(f'view mode {ViewMode.CELLS_WITH_CENTERS} is not supported for 3D graphs')
 
+    axes.grid(visible=True)
+    axes.axis('tight')
+    fig.savefig(save_path)
+    plt.show()
 
 def create_voronoi_diagram(points: list[tuple[int, ...]],
                            point_groups: np.ndarray,
@@ -120,9 +167,9 @@ def create_voronoi_diagram(points: list[tuple[int, ...]],
                            process_cnt: int) -> None:
     point_dims = len(points[0])
     if point_dims == 2:
-        display_func = create_2d_voronoi_diagram
+        display_func = create_2d
     elif point_dims == 3:
-        display_func = create_3d_voronoi_diagram
+        display_func = create_3d
     else:
         raise ValueError('only support the displaying of 2D & 3D points')
 
