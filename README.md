@@ -91,3 +91,9 @@ where `point_i_cell_j` is the cell the *i*-th point was a part of during the *j*
 A small Python script `display_results.py` is included to visualize 2D and 3D results. It takes in the output files from a run of `voronoi_generation` among other arguments, a directory to save the resulting images, and other flag. Use `python display_results.py -h` for a full list of arguments.
 
 Requires Python 3.9, Pillow 8.3.2, and Matplotlib 3.5.0.
+
+### Future Work
+
+1. Higher order Voronoi diagrams
+2. Weighted Voronoi diagrams
+3. Approximate Voronoi diagrams
