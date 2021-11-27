@@ -63,3 +63,4 @@ Makefile
 CMakeCache.txt
 *.cmake
 CMakeFiles
+results.txt

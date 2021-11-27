@@ -17,4 +17,6 @@
  */
 int* split_array(int array_length, int chunks);
 
+void set_random_seed(unsigned int seed);
+
 #endif //VORONOI_GENERATION_SRC_UTIL_H_

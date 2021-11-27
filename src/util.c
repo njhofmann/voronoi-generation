@@ -21,3 +21,7 @@ int* split_array(int array_length, int chunks) {
 
   return chunk_idxs;
 }
+
+void set_random_seed(unsigned int seed) {
+  srand(seed);
+}

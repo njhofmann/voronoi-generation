@@ -2,7 +2,6 @@
 
 2. to do
     1. update read me
-    2. set seed for random
     3. scripts folder
     4. display_results docs, variable naming
     5. valgrind warnings

@@ -102,7 +102,8 @@ void write_point_centers(IntMatrix* points, IntMatrix* point_centers, IntArray* 
     }
     fputc('\n', stream);
   }
-  fclose(stream);
+
+  (stream != stdout) ? fclose(stream) : putc('\n', stream);
 }
 
 void write_all_centers(IntTensor* all_centers, char* output_dirc) {
@@ -113,7 +114,7 @@ void write_all_centers(IntTensor* all_centers, char* output_dirc) {
     free(file);
   }
   write_int_tensor(all_centers, stream);
-  fclose(stream);
+  (stream != stdout) ? fclose(stream) : putc('\n', stream);
 }
 
 void voronoi_relaxation(IntArray* dimensions, IntMatrix* points, IntMatrix* centers, DistanceMetric metric,

@@ -9,6 +9,7 @@
 #include "src/parse.h"
 #include "src/points.h"
 #include "src/file_utils.h"
+#include "src/util.h"
 
 static struct option LONG_OPTIONS[] = {
     // flag = NULL means val is used to id if arg is included
@@ -18,11 +19,12 @@ static struct option LONG_OPTIONS[] = {
     {"iterations", required_argument, NULL, 'i'},
     {"convergence", required_argument, NULL, 'v'},
     {"output_dirc", required_argument, NULL, 'o'},
-    {"p", required_argument, NULL, 'p'},
     {"full", no_argument, NULL, 'f'},
+    {"p", required_argument, NULL, 'p'},
     {"override", no_argument, NULL, 'r'},
     {"processes", required_argument, NULL, 'm'},
     {"k-th-point", required_argument, NULL, 'k'},
+    {"seed", required_argument, NULL, 's'},
     {NULL, 0, NULL, 0}
 };
 
@@ -52,12 +54,13 @@ int main(int argc, char* argv[]) {
   int p = 2;
   int k = 0;
   int num_of_processes = 1;
+  unsigned int random_seed = 1;
   StartingCentersReturn* starting_centers_return;
   IntArray* bounding_box;
 
   // short options - : means required, :: means optional
   char cur_arg;
-  while ((cur_arg = (char) getopt_long(argc, argv, "d:c:b:i:v:o:frp:c:m:k:", LONG_OPTIONS, NULL)) != -1) {
+  while ((cur_arg = (char) getopt_long(argc, argv, "d:c:b:i:v:o:frp:c:m:k:s:", LONG_OPTIONS, NULL)) != -1) {
     switch (cur_arg) {
       case 'd':
         found_option(0, "distance");
@@ -103,6 +106,10 @@ int main(int argc, char* argv[]) {
         found_option(10, "k-th point");
         k = parse_int(argv[optind - 1]);
         break;
+      case 's':
+        found_option(11, "random seed");
+        random_seed = parse_pos_num(argv[optind - 1]);
+        break;
       case '?':
         fprintf(stderr, "unknown arg or arg with a missing required param `-%c`\n", optopt);
         exit(EXIT_FAILURE);
@@ -129,6 +136,8 @@ int main(int argc, char* argv[]) {
     fprintf(stderr, "need a positive convergence threshold and / or positive number of iterations\n");
     exit(EXIT_FAILURE);
   }
+
+  set_random_seed(random_seed);
 
   IntMatrix* starting_centers = starting_centers_return->user_or_rand ?
       starting_centers_return->centers.centers :
