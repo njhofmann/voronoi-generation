@@ -64,3 +64,5 @@ CMakeCache.txt
 *.cmake
 CMakeFiles
 results.txt
+background
+colors

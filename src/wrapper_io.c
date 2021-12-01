@@ -15,12 +15,12 @@ void exact_write(int fd, const void* buf, size_t count) {
   if (r == -1) {
     fprintf(stderr, "failed to write data\n");
     fprintf(stderr, "errno set to %d\n", errno);
-    exit(1);
+    exit(EXIT_FAILURE);
   }
   else if (r != count) {
     fprintf(stderr, "failed to write all data, expected %zu but wrote %zu\n", count, r);
     fprintf(stderr, "errno set to %d\n", errno);
-    exit(1);
+    exit(EXIT_FAILURE);
   }
 }
 
@@ -29,10 +29,10 @@ void exact_read(int fd, void* buf, size_t count) {
   if (r == -1) {
     fprintf(stderr, "failed to read data\n");
     fprintf(stderr, "errno set to %d\n", errno);
-    exit(1);
+    exit(EXIT_FAILURE);
   }
   else if (r != count) {
     fprintf(stderr, "failed to read all data, expected %zu but wrote %zu\n", count, r);
-    exit(1);
+    exit(EXIT_FAILURE);
   }
 }
