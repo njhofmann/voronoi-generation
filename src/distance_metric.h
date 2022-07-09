@@ -12,14 +12,12 @@
 typedef enum {
   EUCLIDEAN = 0,
   MANHATTAN = 1,
-  RAMANUJAN = 2,
-  CHEBYSHEV = 3,
-  CANBERRA = 4,  // weighted manhattan
-  PEARSON = 5,  // 1 - correlation
-  COSINE = 6,
-  BRAY_CURTIS = 7,
-  MINKOWSKI = 8,
-  YANG = 9,
+  CHEBYSHEV = 2,
+  CANBERRA = 3,
+  BRAY_CURTIS = 4,
+  MINKOWSKI = 5,
+  YANG = 6,
+  HELLINGER = 7,
 } DistanceMetric;
 
 

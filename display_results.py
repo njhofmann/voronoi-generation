@@ -49,7 +49,7 @@ def load_colors(path: Union[str, int]) -> list[tuple[int, int, int]]:
 
 def load_point_groups(path: pl.Path) -> tuple[list[tuple[int, ...]], np.ndarray]:
     points, point_groups = [], []
-    with open(path.joinpath('point_centers.txt'), 'r') as f:
+    with open(path / 'point_centers.txt', 'r') as f:
         for line in f.readlines():
             temp = line.split(' ')
             points.append(parse_point(temp[0]))
@@ -87,6 +87,7 @@ def create_center_lines(centers, size) -> pi.Image:
         draw.line(list(map(tuple, group)), fill='black', width=line_width)
     return img
 
+
 def create_2d_centers_over_time(centers: list[list[tuple[int, ...]]], size: tuple[int, int], processes: int) \
         -> list[pi.Image]:
     centers = np.array(centers)
@@ -98,6 +99,7 @@ def create_2d_centers_over_time(centers: list[list[tuple[int, ...]]], size: tupl
 
     with mp.Pool(processes=process_cnt) as p:
         return p.starmap(func=create_center_lines, iterable=[(centers[:, :i, :], size) for i in range(1, n_iters)])
+
 
 def create_2d(points: list[tuple[int, ...]],
               point_groups: np.ndarray,
@@ -133,7 +135,7 @@ def create_3d_voronoi_diagram(points: list[tuple[int, ...]],
                               point_groups: np.ndarray,
                               colors: list[tuple[int, int, int]],
                               axes: plt.Axes):
-    # only creates a graph for the last image
+    # only creates a visualization for the last image
     last_point = points[-1]
 
     face_colors = np.zeros((*[x + 1 for x in last_point], 3), dtype=np.float32)
@@ -163,7 +165,7 @@ def create_3d(points: list[tuple[int, ...]],
     axes.grid(visible=True)
     axes.axis('tight')
     fig.savefig(save_path)
-    plt.show()
+
 
 def create_voronoi_diagram(points: list[tuple[int, ...]],
                            point_groups: np.ndarray,
